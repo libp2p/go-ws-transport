@@ -9,15 +9,21 @@
   "gxDependencies": [
     {
       "author": "whyrusleeping",
-      "hash": "QmYVqhVfbK4BKvbW88Lhm26b3ud14sTBvcm1H7uWUx1Fkp",
+      "hash": "QmYp8PC6b9M3UY4awdHkdRUim68KpGSmRmz27bANHteen6",
       "name": "go-multiaddr-net",
+      "version": "1.1.0"
+    },
+    {
+      "author": "whyrusleeping",
+      "hash": "QmeLQ13LftT9XhNn22piZc3GP56fGqhijuL5Y8KdUaRn1g",
+      "name": "mafmt",
       "version": "0.0.0"
     },
     {
       "author": "whyrusleeping",
-      "hash": "QmWLfU4tstw2aNcTykDm44xbSTCYJ9pUJwfhQCKGwckcHx",
-      "name": "mafmt",
-      "version": "0.0.0"
+      "hash": "QmeQazgnSA3rrPWuTfXUx9g9kVBKE717ysRpaJPXTGMsDq",
+      "name": "go-libp2p-transport",
+      "version": "1.1.2"
     }
   ],
   "gxVersion": "0.4.0",
