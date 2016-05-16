@@ -1,0 +1,28 @@
+{
+  "author": "whyrusleeping",
+  "bugs": {
+    "url": "https://github.com/whyrusleeping/ws-transport"
+  },
+  "gx": {
+    "dvcsimport": "github.com/whyrusleeping/ws-transport"
+  },
+  "gxDependencies": [
+    {
+      "author": "whyrusleeping",
+      "hash": "QmYVqhVfbK4BKvbW88Lhm26b3ud14sTBvcm1H7uWUx1Fkp",
+      "name": "go-multiaddr-net",
+      "version": "0.0.0"
+    },
+    {
+      "author": "whyrusleeping",
+      "hash": "QmWLfU4tstw2aNcTykDm44xbSTCYJ9pUJwfhQCKGwckcHx",
+      "name": "mafmt",
+      "version": "0.0.0"
+    }
+  ],
+  "gxVersion": "0.4.0",
+  "language": "go",
+  "license": "",
+  "name": "ws-transport",
+  "version": "0.0.0"
+}
