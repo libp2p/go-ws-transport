@@ -30,5 +30,5 @@
   "language": "go",
   "license": "",
   "name": "ws-transport",
-  "version": "0.0.0"
+  "version": "1.0.0"
 }
