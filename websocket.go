@@ -41,7 +41,17 @@ func init() {
 }
 
 func ConvertWebsocketMultiaddrToNetAddr(maddr ma.Multiaddr) (net.Addr, error) {
-	panic("not yet")
+	_, host, err := manet.DialArgs(maddr)
+	if err != nil {
+		return nil, err
+	}
+
+	a := &ws.Addr{
+		URL: &url.URL{
+			Host: host,
+		},
+	}
+	return a, nil
 }
 
 func ParseWebsocketNetAddr(a net.Addr) (ma.Multiaddr, error) {
@@ -65,8 +75,7 @@ func ParseWebsocketNetAddr(a net.Addr) (ma.Multiaddr, error) {
 		return nil, err
 	}
 
-	OUT := tcpma.Encapsulate(wsma)
-	return OUT, nil
+	return tcpma.Encapsulate(wsma), nil
 }
 
 type WebsocketTransport struct{}
