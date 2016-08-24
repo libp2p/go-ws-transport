@@ -27,8 +27,8 @@
     },
     {
       "author": "whyrusleeping",
-      "hash": "QmZy2y8t9zQH2a1b8q2ZSLKp17ATuJoCNxxyMFG5qFExpt",
-      "name": "go-net",
+      "hash": "QmTDQRD9abCLfdZCjVxuujSVq1X7pkW8eXhaJtgsjH2fnT",
+      "name": "websocket",
       "version": "0.0.0"
     }
   ],

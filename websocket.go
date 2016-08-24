@@ -2,7 +2,6 @@ package websocket
 
 import (
 	"fmt"
-	"log"
 	"net"
 	"net/http"
 	"net/url"
@@ -34,7 +33,7 @@ var WsCodec = &manet.NetCodec{
 func init() {
 	err := ma.AddProtocol(WsProtocol)
 	if err != nil {
-		log.Fatalf("error registering websocket protocol: %s", err)
+		panic(fmt.Errorf("error registering websocket protocol: %s", err))
 	}
 
 	manet.RegisterNetCodec(WsCodec)
@@ -102,7 +101,6 @@ func parseMultiaddr(a ma.Multiaddr) (string, error) {
 func (d *dialer) Dial(raddr ma.Multiaddr) (tpt.Conn, error) {
 	wsurl, err := parseMultiaddr(raddr)
 	if err != nil {
-		log.Println("parse multiaddr failed: ", err)
 		return nil, err
 	}
 

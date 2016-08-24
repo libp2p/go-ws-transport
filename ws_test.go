@@ -1,14 +1,11 @@
 package websocket
 
 import (
-	"log"
+	"bytes"
 	"testing"
-	"time"
 
 	ma "github.com/jbenet/go-multiaddr"
 )
-
-var _ = log.Println
 
 func TestMultiaddrParsing(t *testing.T) {
 	addr, err := ma.NewMultiaddr("/ip4/127.0.0.1/tcp/5555/ws")
@@ -33,6 +30,9 @@ func TestWebsocketListen(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer l.Close()
+
+	msg := []byte("HELLO WORLD")
 
 	go func() {
 		d, _ := tpt.Dialer(nil)
@@ -42,8 +42,7 @@ func TestWebsocketListen(t *testing.T) {
 			return
 		}
 
-		c.Write([]byte("HELLO WORLD!"))
-		time.Sleep(time.Second)
+		c.Write(msg)
 		c.Close()
 	}()
 
@@ -51,6 +50,7 @@ func TestWebsocketListen(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer c.Close()
 
 	buf := make([]byte, 32)
 	n, err := c.Read(buf)
@@ -58,8 +58,7 @@ func TestWebsocketListen(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	log.Printf("READ: %s", buf[:n])
-	c.Close()
-	l.Close()
-	time.Sleep(time.Second)
+	if !bytes.Equal(buf[:n], msg) {
+		t.Fatal("got wrong message", buf[:n], msg)
+	}
 }
