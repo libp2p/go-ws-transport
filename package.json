@@ -24,11 +24,17 @@
       "hash": "QmbRuJ16EfPGWuEguoNxwPacpeHFUAZb2XQXVvUt5Vxg5q",
       "name": "go-libp2p-transport",
       "version": "1.3.5"
+    },
+    {
+      "author": "whyrusleeping",
+      "hash": "QmZy2y8t9zQH2a1b8q2ZSLKp17ATuJoCNxxyMFG5qFExpt",
+      "name": "go-net",
+      "version": "0.0.0"
     }
   ],
   "gxVersion": "0.4.0",
   "language": "go",
   "license": "",
   "name": "ws-transport",
-  "version": "1.0.2"
+  "version": "1.0.3"
 }

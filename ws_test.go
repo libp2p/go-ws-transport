@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	ma "gx/ipfs/QmYzDkkgAEmrcNzFCiYo6L1dTX4EAG1gZkbtdbd9trL4vd/go-multiaddr"
+	ma "github.com/jbenet/go-multiaddr"
 )
 
 var _ = log.Println
