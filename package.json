@@ -21,14 +21,14 @@
     },
     {
       "author": "whyrusleeping",
-      "hash": "QmboVACz6WES3byh3q8jdYPWL9TMz7CT89V34WPtruuRoS",
+      "hash": "QmbRuJ16EfPGWuEguoNxwPacpeHFUAZb2XQXVvUt5Vxg5q",
       "name": "go-libp2p-transport",
-      "version": "1.1.3"
+      "version": "1.3.5"
     }
   ],
   "gxVersion": "0.4.0",
   "language": "go",
   "license": "",
   "name": "ws-transport",
-  "version": "1.0.1"
+  "version": "1.0.2"
 }

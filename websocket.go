@@ -7,13 +7,13 @@ import (
 	"net/http"
 	"net/url"
 
-	tpt "github.com/ipfs/go-libp2p-transport"
-	manet "github.com/jbenet/go-multiaddr-net"
-	mafmt "github.com/whyrusleeping/mafmt"
 	ws "golang.org/x/net/websocket"
+	manet "gx/ipfs/QmPpRcbNUXauP3zWZ1NJMLWpe4QnmEHrd2ba2D3yqWznw7/go-multiaddr-net"
+	tpt "gx/ipfs/QmbRuJ16EfPGWuEguoNxwPacpeHFUAZb2XQXVvUt5Vxg5q/go-libp2p-transport"
+	mafmt "gx/ipfs/QmeLQ13LftT9XhNn22piZc3GP56fGqhijuL5Y8KdUaRn1g/mafmt"
 
-	ma "github.com/jbenet/go-multiaddr"
 	"golang.org/x/net/context"
+	ma "gx/ipfs/QmYzDkkgAEmrcNzFCiYo6L1dTX4EAG1gZkbtdbd9trL4vd/go-multiaddr"
 )
 
 var WsProtocol = ma.Protocol{
