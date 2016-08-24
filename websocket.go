@@ -1,6 +1,7 @@
 package websocket
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"net/http"
@@ -12,7 +13,6 @@ import (
 	ws "golang.org/x/net/websocket"
 
 	ma "github.com/jbenet/go-multiaddr"
-	"golang.org/x/net/context"
 )
 
 var WsProtocol = ma.Protocol{
