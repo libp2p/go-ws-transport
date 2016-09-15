@@ -184,6 +184,7 @@ func (t *WebsocketTransport) wrapListener(l manet.Listener) *listener {
 
 func (l *listener) handleWsConn(s *ws.Conn) {
 	ctx, cancel := context.WithCancel(context.Background())
+	s.PayloadType = ws.BinaryFrame
 
 	l.incoming <- &conn{
 		Conn: s,
