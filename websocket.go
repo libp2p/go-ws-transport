@@ -99,6 +99,10 @@ func parseMultiaddr(a ma.Multiaddr) (string, error) {
 }
 
 func (d *dialer) Dial(raddr ma.Multiaddr) (tpt.Conn, error) {
+	return d.DialContext(context.Background(), raddr)
+}
+
+func (d *dialer) DialContext(ctx context.Context, raddr ma.Multiaddr) (tpt.Conn, error) {
 	wsurl, err := parseMultiaddr(raddr)
 	if err != nil {
 		return nil, err
