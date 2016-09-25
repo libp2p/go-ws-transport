@@ -21,9 +21,9 @@
     },
     {
       "author": "whyrusleeping",
-      "hash": "Qmazcq5ZXnyP5smvUquM8dAro6ZAppExxyV7Z3URq3dzin",
+      "hash": "QmekekLwe4KGWtaeVHr8AfRht25RgdGzLunnQF2gHVi62E",
       "name": "go-libp2p-transport",
-      "version": "1.6.1"
+      "version": "2.1.1"
     },
     {
       "author": "whyrusleeping",
@@ -36,5 +36,6 @@
   "language": "go",
   "license": "",
   "name": "ws-transport",
-  "version": "1.2.2"
+  "version": "1.2.3"
 }
+

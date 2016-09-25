@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"net/url"
 
-	tpt "github.com/ipfs/go-libp2p-transport"
 	manet "github.com/jbenet/go-multiaddr-net"
+	tpt "github.com/libp2p/go-libp2p-transport"
 	mafmt "github.com/whyrusleeping/mafmt"
 	ws "golang.org/x/net/websocket"
 
