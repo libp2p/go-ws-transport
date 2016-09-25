@@ -9,9 +9,9 @@
   "gxDependencies": [
     {
       "author": "whyrusleeping",
-      "hash": "QmPpRcbNUXauP3zWZ1NJMLWpe4QnmEHrd2ba2D3yqWznw7",
+      "hash": "QmY83KqqnQ286ZWbV2x7ixpeemH3cBpk8R54egS619WYff",
       "name": "go-multiaddr-net",
-      "version": "1.2.0"
+      "version": "1.3.0"
     },
     {
       "author": "whyrusleeping",
@@ -36,6 +36,6 @@
   "language": "go",
   "license": "",
   "name": "ws-transport",
-  "version": "1.2.3"
+  "version": "1.2.4"
 }
 
