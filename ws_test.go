@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	ma "github.com/jbenet/go-multiaddr"
+	ma "github.com/multiformats/go-multiaddr"
 )
 
 func TestMultiaddrParsing(t *testing.T) {

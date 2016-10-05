@@ -7,12 +7,11 @@ import (
 	"net/http"
 	"net/url"
 
-	manet "github.com/jbenet/go-multiaddr-net"
 	tpt "github.com/libp2p/go-libp2p-transport"
+	ma "github.com/multiformats/go-multiaddr"
+	manet "github.com/multiformats/go-multiaddr-net"
 	mafmt "github.com/whyrusleeping/mafmt"
 	ws "golang.org/x/net/websocket"
-
-	ma "github.com/jbenet/go-multiaddr"
 )
 
 var WsProtocol = ma.Protocol{
