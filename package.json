@@ -21,7 +21,7 @@
     },
     {
       "author": "whyrusleeping",
-      "hash": "QmR4YrM1DdvYmox249o8aday8oiotkcsT1Qzv42ujPEQDb",
+      "hash": "QmVpYwkpCJLSLpEY9tUbDQjCVdEVusgibpE9TopF5MPoSS",
       "name": "go-libp2p-transport",
       "version": "2.2.4"
     },
@@ -37,6 +37,6 @@
   "license": "",
   "name": "ws-transport",
   "releaseCmd": "git commit -a -m \"gx publish $VERSION\"",
-  "version": "1.4.2"
+  "version": "1.4.3"
 }
 
