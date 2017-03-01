@@ -13,9 +13,25 @@ func TestMultiaddrParsing(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err = parseMultiaddr(addr)
+	wsaddr, err := parseMultiaddr(addr)
 	if err != nil {
 		t.Fatal(err)
+	}
+	if wsaddr.String() != "ws://127.0.0.1:5555" {
+		t.Fatalf("expected ws://127.0.0.1:5555, got %s", wsaddr.String())
+	}
+
+	addr, err = ma.NewMultiaddr("/ip6/::1/tcp/5555/wss")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	wsaddr, err = parseMultiaddr(addr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if wsaddr.String() != "wss://[::1]:5555" {
+		t.Fatalf("expected wss://[::1]:5555, got %s", wsaddr.String())
 	}
 }
 

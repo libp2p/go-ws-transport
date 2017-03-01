@@ -19,12 +19,26 @@ var WsProtocol = ma.Protocol{
 	Name:  "ws",
 	VCode: ma.CodeToVarint(477),
 }
+var WssProtocol = ma.Protocol{
+	Code:  478,
+	Name:  "wss",
+	VCode: ma.CodeToVarint(478),
+}
 
-var WsFmt = mafmt.And(mafmt.TCP, mafmt.Base(WsProtocol.Code))
+var WsFmt = mafmt.Or(
+	mafmt.And(mafmt.TCP, mafmt.Base(WsProtocol.Code)),
+	mafmt.And(mafmt.TCP, mafmt.Base(WssProtocol.Code)),
+)
 
 var WsCodec = &manet.NetCodec{
 	NetAddrNetworks:  []string{"websocket"},
 	ProtocolName:     "ws",
+	ConvertMultiaddr: ConvertWebsocketMultiaddrToNetAddr,
+	ParseNetAddr:     ParseWebsocketNetAddr,
+}
+var WssCodec = &manet.NetCodec{
+	NetAddrNetworks:  []string{"websocket+tls"},
+	ProtocolName:     "wss",
 	ConvertMultiaddr: ConvertWebsocketMultiaddrToNetAddr,
 	ParseNetAddr:     ParseWebsocketNetAddr,
 }
@@ -34,8 +48,13 @@ func init() {
 	if err != nil {
 		panic(fmt.Errorf("error registering websocket protocol: %s", err))
 	}
+	err = ma.AddProtocol(WssProtocol)
+	if err != nil {
+		panic(fmt.Errorf("error registering websocket+tls protocol: %s", err))
+	}
 
 	manet.RegisterNetCodec(WsCodec)
+	manet.RegisterNetCodec(WssCodec)
 }
 
 func ConvertWebsocketMultiaddrToNetAddr(maddr ma.Multiaddr) (net.Addr, error) {
@@ -68,7 +87,7 @@ func ParseWebsocketNetAddr(a net.Addr) (ma.Multiaddr, error) {
 		return nil, err
 	}
 
-	wsma, err := ma.NewMultiaddr("/ws")
+	wsma, err := ma.NewMultiaddr("/" + wsa.Scheme)
 	if err != nil {
 		return nil, err
 	}
@@ -88,13 +107,35 @@ func (t *WebsocketTransport) Dialer(_ ma.Multiaddr, opts ...tpt.DialOpt) (tpt.Di
 
 type dialer struct{}
 
-func parseMultiaddr(a ma.Multiaddr) (string, error) {
-	_, host, err := manet.DialArgs(a)
+func parseMultiaddr(a ma.Multiaddr) (net.Addr, error) {
+	wsa := &ws.Addr{}
+	wsa.URL = &url.URL{Scheme: "ws"}
+
+	port, err := a.ValueForProtocol(ma.P_TCP)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return "ws://" + host, nil
+	for _, p := range a.Protocols() {
+		switch p.Code {
+		case ma.P_IP6:
+			host, err := a.ValueForProtocol(ma.P_IP6)
+			if err != nil {
+				return nil, err
+			}
+			wsa.Host = fmt.Sprintf("[%s]:%s", host, port)
+		case ma.P_IP4:
+			host, err := a.ValueForProtocol(ma.P_IP4)
+			if err != nil {
+				return nil, err
+			}
+			wsa.Host = fmt.Sprintf("%s:%s", host, port)
+		case WssProtocol.Code:
+			wsa.Scheme = "wss"
+		}
+	}
+
+	return wsa, nil
 }
 
 func (d *dialer) Dial(raddr ma.Multiaddr) (tpt.Conn, error) {
@@ -102,12 +143,12 @@ func (d *dialer) Dial(raddr ma.Multiaddr) (tpt.Conn, error) {
 }
 
 func (d *dialer) DialContext(ctx context.Context, raddr ma.Multiaddr) (tpt.Conn, error) {
-	wsurl, err := parseMultiaddr(raddr)
+	wsa, err := parseMultiaddr(raddr)
 	if err != nil {
 		return nil, err
 	}
 
-	wscon, err := ws.Dial(wsurl, "", "http://127.0.0.1:0/")
+	wscon, err := ws.Dial(wsa.String(), "", "http://127.0.0.1:0/")
 	if err != nil {
 		return nil, err
 	}
