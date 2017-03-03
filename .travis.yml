@@ -9,10 +9,10 @@ go:
   - 1.7
 
 before_install:
-  - go get github.com/mattn/goveralls
-  - go get golang.org/x/tools/cmd/cover
-  - go get github.com/whyrusleeping/gx
-  - go get github.com/whyrusleeping/gx-go
+  - go get -d github.com/mattn/goveralls
+  - go get -d golang.org/x/tools/cmd/cover
+  - go get -d github.com/whyrusleeping/gx
+  - go get -d github.com/whyrusleeping/gx-go
 
 install:
   - gx --verbose install --global
