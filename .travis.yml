@@ -3,7 +3,6 @@ os:
   - osx
 
 language: go
-
 sudo: false
 
 go:
