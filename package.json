@@ -9,19 +9,19 @@
   "gxDependencies": [
     {
       "author": "whyrusleeping",
-      "hash": "QmVCNGTyD4EkvNYaAp253uMQ9Rjsjy2oGMvcdJJUoVRfja",
+      "hash": "QmUBQv5su4z2zkkfEwShU22Vfq3bWRtD7bogYiSCeyjvEd",
       "name": "go-multiaddr-net",
       "version": "1.5.2"
     },
     {
       "author": "whyrusleeping",
-      "hash": "QmYjJnSTfXWhYL2cV1xFphPqjqowJqH7ZKLA1As8QrPHbn",
+      "hash": "QmVT3ob9FrtYfKZn5CN4yMSxDoMoK7kkiATy4hw5BSNRrN",
       "name": "mafmt",
       "version": "1.1.3"
     },
     {
       "author": "whyrusleeping",
-      "hash": "QmVpYwkpCJLSLpEY9tUbDQjCVdEVusgibpE9TopF5MPoSS",
+      "hash": "QmPRK7UtNyvAxMt7J1Y1Nwi8ERm7e5Bcv31zRgmEe9xhmo",
       "name": "go-libp2p-transport",
       "version": "2.2.4"
     },
@@ -37,6 +37,6 @@
   "license": "",
   "name": "ws-transport",
   "releaseCmd": "git commit -a -m \"gx publish $VERSION\"",
-  "version": "1.4.3"
+  "version": "1.4.4"
 }
 
