@@ -177,8 +177,7 @@ func (t *WebsocketTransport) Listen(a ma.Multiaddr) (tpt.Listener, error) {
 
 	tlist := t.wrapListener(list, u)
 
-	http.HandleFunc("/", tlist.handleWsConn)
-	go http.Serve(list.NetListener(), nil)
+	go http.Serve(list.NetListener(), tlist)
 
 	return tlist, nil
 }
@@ -192,7 +191,7 @@ func (t *WebsocketTransport) wrapListener(l manet.Listener, origin *url.URL) *li
 	}
 }
 
-func (l *listener) handleWsConn(w http.ResponseWriter, r *http.Request) {
+func (l *listener) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	c, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		http.Error(w, "Failed to upgrade websocket", 400)
