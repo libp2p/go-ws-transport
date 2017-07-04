@@ -13,7 +13,7 @@ import (
 	manet "github.com/multiformats/go-multiaddr-net"
 	mafmt "github.com/whyrusleeping/mafmt"
 	ws "golang.org/x/net/websocket"
-	wsGorilla "gx/ipfs/QmdKzkTPWmQ4nc8McYVb9TJYzRGmux9sqySQBD4nhbjQpf/."
+	wsGorilla "gx/ipfs/QmdKzkTPWmQ4nc8McYVb9TJYzRGmux9sqySQBD4nhbjQpf"
 )
 
 var WsProtocol = ma.Protocol{
@@ -245,7 +245,6 @@ type GorillaNetConn struct {
 }
 
 func (c GorillaNetConn) Read(b []byte) (n int, err error) {
-	fmt.Println("reading")
 	_, r, err := c.Inner.NextReader()
 	if err != nil {
 		return 0, err
@@ -255,7 +254,6 @@ func (c GorillaNetConn) Read(b []byte) (n int, err error) {
 }
 
 func (c GorillaNetConn) Write(b []byte) (n int, err error) {
-	fmt.Printf("write %s\n", string(b))
 	if err := c.Inner.WriteMessage(c.DefaultMessageType, b); err != nil {
 		return 0, err
 	}
@@ -280,7 +278,7 @@ func (c GorillaNetConn) SetDeadline(t time.Time) error {
 		return err
 	}
 
-	return c.SetReadDeadline(t)
+	return c.SetWriteDeadline(t)
 }
 
 func (c GorillaNetConn) SetReadDeadline(t time.Time) error {
