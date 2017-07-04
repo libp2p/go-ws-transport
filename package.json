@@ -30,6 +30,12 @@
       "hash": "QmTDQRD9abCLfdZCjVxuujSVq1X7pkW8eXhaJtgsjH2fnT",
       "name": "websocket",
       "version": "0.0.0"
+    },
+    {
+      "author": "dignifiedquire",
+      "hash": "QmdKzkTPWmQ4nc8McYVb9TJYzRGmux9sqySQBD4nhbjQpf",
+      "name": ".",
+      "version": "0.0.0"
     }
   ],
   "gxVersion": "0.4.0",
