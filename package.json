@@ -32,10 +32,10 @@
       "version": "0.0.0"
     },
     {
-      "author": "dignifiedquire",
-      "hash": "QmdKzkTPWmQ4nc8McYVb9TJYzRGmux9sqySQBD4nhbjQpf",
-      "name": ".",
-      "version": "0.0.0"
+      "author": "gorilla",
+      "hash": "QmZH5VXfAJouGMyCCHTRPGCT3e5MG9Lu78Ln3YAYW1XTts",
+      "name": "websocket",
+      "version": "0.0.1"
     }
   ],
   "gxVersion": "0.4.0",
@@ -45,4 +45,3 @@
   "releaseCmd": "git commit -a -m \"gx publish $VERSION\"",
   "version": "1.5.0"
 }
-
