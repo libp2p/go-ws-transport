@@ -13,7 +13,7 @@ import (
 	manet "github.com/multiformats/go-multiaddr-net"
 	mafmt "github.com/whyrusleeping/mafmt"
 	ws "golang.org/x/net/websocket"
-	wsGorilla "gx/ipfs/QmdKzkTPWmQ4nc8McYVb9TJYzRGmux9sqySQBD4nhbjQpf"
+	wsGorilla "gx/ipfs/QmZH5VXfAJouGMyCCHTRPGCT3e5MG9Lu78Ln3YAYW1XTts/websocket"
 )
 
 var WsProtocol = ma.Protocol{
