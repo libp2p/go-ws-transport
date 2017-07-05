@@ -8,12 +8,12 @@ import (
 	"net/url"
 	"time"
 
+	wsGorilla "github.com/gorilla/websocket"
 	tpt "github.com/libp2p/go-libp2p-transport"
 	ma "github.com/multiformats/go-multiaddr"
 	manet "github.com/multiformats/go-multiaddr-net"
 	mafmt "github.com/whyrusleeping/mafmt"
 	ws "golang.org/x/net/websocket"
-	wsGorilla "gx/ipfs/QmZH5VXfAJouGMyCCHTRPGCT3e5MG9Lu78Ln3YAYW1XTts/websocket"
 )
 
 var WsProtocol = ma.Protocol{
