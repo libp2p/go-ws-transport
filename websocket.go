@@ -202,7 +202,7 @@ func (l *listener) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	wrapped := NewGorillaNetConn(c)
 	l.incoming <- &conn{
-		GorillaNetConn: &wrapped,
+		GorillaNetConn: wrapped,
 		done:           cancel,
 	}
 
@@ -243,7 +243,7 @@ type GorillaNetConn struct {
 	DefaultMessageType int
 }
 
-func (c GorillaNetConn) Read(b []byte) (n int, err error) {
+func (c *GorillaNetConn) Read(b []byte) (n int, err error) {
 	_, r, err := c.Inner.NextReader()
 	if err != nil {
 		return 0, err
@@ -252,7 +252,7 @@ func (c GorillaNetConn) Read(b []byte) (n int, err error) {
 	return r.Read(b)
 }
 
-func (c GorillaNetConn) Write(b []byte) (n int, err error) {
+func (c *GorillaNetConn) Write(b []byte) (n int, err error) {
 	if err := c.Inner.WriteMessage(c.DefaultMessageType, b); err != nil {
 		return 0, err
 	}
@@ -260,19 +260,19 @@ func (c GorillaNetConn) Write(b []byte) (n int, err error) {
 	return len(b), nil
 }
 
-func (c GorillaNetConn) Close() error {
+func (c *GorillaNetConn) Close() error {
 	return c.Inner.Close()
 }
 
-func (c GorillaNetConn) LocalAddr() net.Addr {
+func (c *GorillaNetConn) LocalAddr() net.Addr {
 	return c.Inner.LocalAddr()
 }
 
-func (c GorillaNetConn) RemoteAddr() net.Addr {
+func (c *GorillaNetConn) RemoteAddr() net.Addr {
 	return c.Inner.RemoteAddr()
 }
 
-func (c GorillaNetConn) SetDeadline(t time.Time) error {
+func (c *GorillaNetConn) SetDeadline(t time.Time) error {
 	if err := c.SetReadDeadline(t); err != nil {
 		return err
 	}
@@ -280,16 +280,16 @@ func (c GorillaNetConn) SetDeadline(t time.Time) error {
 	return c.SetWriteDeadline(t)
 }
 
-func (c GorillaNetConn) SetReadDeadline(t time.Time) error {
+func (c *GorillaNetConn) SetReadDeadline(t time.Time) error {
 	return c.Inner.SetReadDeadline(t)
 }
 
-func (c GorillaNetConn) SetWriteDeadline(t time.Time) error {
+func (c *GorillaNetConn) SetWriteDeadline(t time.Time) error {
 	return c.Inner.SetWriteDeadline(t)
 }
 
-func NewGorillaNetConn(raw *wsGorilla.Conn) GorillaNetConn {
-	return GorillaNetConn{
+func NewGorillaNetConn(raw *wsGorilla.Conn) *GorillaNetConn {
+	return &GorillaNetConn{
 		Inner:              raw,
 		DefaultMessageType: wsGorilla.BinaryMessage,
 	}
