@@ -7,18 +7,6 @@ import (
 	ma "github.com/multiformats/go-multiaddr"
 )
 
-func TestMultiaddrParsing(t *testing.T) {
-	addr, err := ma.NewMultiaddr("/ip4/127.0.0.1/tcp/5555/ws")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	_, err = parseMultiaddr(addr)
-	if err != nil {
-		t.Fatal(err)
-	}
-}
-
 func TestWebsocketListen(t *testing.T) {
 	zero, err := ma.NewMultiaddr("/ip4/127.0.0.1/tcp/0/ws")
 	if err != nil {
