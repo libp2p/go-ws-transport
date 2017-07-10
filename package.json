@@ -30,6 +30,12 @@
       "hash": "QmTDQRD9abCLfdZCjVxuujSVq1X7pkW8eXhaJtgsjH2fnT",
       "name": "websocket",
       "version": "0.0.0"
+    },
+    {
+      "author": "gorilla",
+      "hash": "QmZH5VXfAJouGMyCCHTRPGCT3e5MG9Lu78Ln3YAYW1XTts",
+      "name": "websocket",
+      "version": "0.0.1"
     }
   ],
   "gxVersion": "0.4.0",
@@ -39,4 +45,3 @@
   "releaseCmd": "git commit -a -m \"gx publish $VERSION\"",
   "version": "1.5.0"
 }
-
