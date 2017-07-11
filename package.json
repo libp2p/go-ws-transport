@@ -9,27 +9,21 @@
   "gxDependencies": [
     {
       "author": "whyrusleeping",
-      "hash": "Qmf1Gq7N45Rpuw7ev47uWgH6dLPtdnvcMRNPkVBwqjLJg2",
+      "hash": "QmX3U3YXCQ6UYBxq2LVWF8dARS1hPUTEYLrSx654Qyxyw6",
       "name": "go-multiaddr-net",
-      "version": "1.5.4"
+      "version": "1.5.5"
     },
     {
       "author": "whyrusleeping",
-      "hash": "QmSkUKdsSrEo1v28Y3NJ7vQT7jmbxg87g8ucbhctwHEqb4",
+      "hash": "QmZQa5J7j7kd44GGC4aKX8J9JGGzCMqwGzcEFqGV1YD57A",
       "name": "mafmt",
-      "version": "1.2.2"
+      "version": "1.2.3"
     },
     {
       "author": "whyrusleeping",
-      "hash": "QmSKoeo64CA54WNWqzVXHi5aT2LbgzP7B9VzQjW5yh7d4H",
+      "hash": "QmQVm7pWYKPStMeMrXNRpvAJE5rSm9ThtQoNmjNHC7sh3k",
       "name": "go-libp2p-transport",
-      "version": "2.2.7"
-    },
-    {
-      "author": "whyrusleeping",
-      "hash": "QmTDQRD9abCLfdZCjVxuujSVq1X7pkW8eXhaJtgsjH2fnT",
-      "name": "websocket",
-      "version": "0.0.0"
+      "version": "2.2.8"
     },
     {
       "author": "gorilla",
@@ -43,5 +37,6 @@
   "license": "MIT",
   "name": "go-ws-transport",
   "releaseCmd": "git commit -a -m \"gx publish $VERSION\"",
-  "version": "1.5.0"
+  "version": "1.5.1"
 }
+
