@@ -2,6 +2,7 @@ package websocket
 
 import (
 	"bytes"
+	"io"
 	"io/ioutil"
 	"testing"
 	"testing/iotest"
@@ -89,5 +90,56 @@ func TestConcurrentClose(t *testing.T) {
 			t.Fatal(err)
 		}
 		c.Close()
+	}
+}
+
+func TestWriteZero(t *testing.T) {
+	zero, err := ma.NewMultiaddr("/ip4/127.0.0.1/tcp/0/ws")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	tpt := &WebsocketTransport{}
+	l, err := tpt.Listen(zero)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer l.Close()
+
+	msg := []byte(nil)
+
+	go func() {
+		d, _ := tpt.Dialer(nil)
+		c, err := d.Dial(l.Multiaddr())
+		defer c.Close()
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		for i := 0; i < 100; i++ {
+			n, err := c.Write(msg)
+			if n != 0 {
+				t.Errorf("expected to write 0 bytes, wrote %d", n)
+			}
+			if err != nil {
+				t.Error(err)
+				return
+			}
+		}
+	}()
+
+	c, err := l.Accept()
+	defer c.Close()
+	if err != nil {
+		t.Fatal(err)
+	}
+	buf := make([]byte, 100)
+	n, err := c.Read(buf)
+	if n != 0 {
+		t.Errorf("read %d bytes, expected 0", n)
+	}
+	if err != io.EOF {
+		t.Errorf("expected EOF, got err: %s", err)
 	}
 }
