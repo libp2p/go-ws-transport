@@ -33,7 +33,12 @@ var WsCodec = &manet.NetCodec{
 }
 
 // Default gorilla upgrader
-var upgrader = ws.Upgrader{}
+var upgrader = ws.Upgrader{
+	// Allow requests from *all* origins.
+	CheckOrigin: func(r *http.Request) bool {
+		return true
+	},
+}
 
 func init() {
 	err := ma.AddProtocol(WsProtocol)
