@@ -83,7 +83,7 @@ func (c *Conn) Write(b []byte) (n int, err error) {
 // close error, subsequent and concurrent calls will return nil.
 // This method is thread-safe.
 func (c *Conn) Close() error {
-	var err error = nil
+	var err error
 	c.closeOnce.Do(func() {
 		if c.done != nil {
 			c.done()
