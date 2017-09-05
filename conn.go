@@ -3,10 +3,15 @@ package websocket
 import (
 	"io"
 	"net"
+	"sync"
 	"time"
 
 	ws "github.com/gorilla/websocket"
 )
+
+// GracefulCloseTimeout is the time to wait trying to gracefully close a
+// connection before simply cutting it.
+var GracefulCloseTimeout = 100 * time.Millisecond
 
 var _ net.Conn = (*Conn)(nil)
 
@@ -16,6 +21,7 @@ type Conn struct {
 	DefaultMessageType int
 	done               func()
 	reader             io.Reader
+	closeOnce          sync.Once
 }
 
 func (c *Conn) Read(b []byte) (int, error) {
@@ -73,13 +79,22 @@ func (c *Conn) Write(b []byte) (n int, err error) {
 	return len(b), nil
 }
 
+// Close closes the connection. Only the first call to Close will receive the
+// close error, subsequent and concurrent calls will return nil.
+// This method is thread-safe.
 func (c *Conn) Close() error {
-	if c.done != nil {
-		c.done()
-	}
+	var err error = nil
+	c.closeOnce.Do(func() {
+		if c.done != nil {
+			c.done()
+			// Be nice to GC
+			c.done = nil
+		}
 
-	c.Conn.WriteMessage(ws.CloseMessage, nil)
-	return c.Conn.Close()
+		c.Conn.WriteControl(ws.CloseMessage, nil, time.Now().Add(GracefulCloseTimeout))
+		err = c.Conn.Close()
+	})
+	return err
 }
 
 func (c *Conn) LocalAddr() net.Addr {
