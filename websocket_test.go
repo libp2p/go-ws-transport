@@ -2,7 +2,9 @@ package websocket
 
 import (
 	"bytes"
+	"io/ioutil"
 	"testing"
+	"testing/iotest"
 
 	ma "github.com/multiformats/go-multiaddr"
 )
@@ -40,13 +42,14 @@ func TestWebsocketListen(t *testing.T) {
 	}
 	defer c.Close()
 
-	buf := make([]byte, 32)
-	n, err := c.Read(buf)
+	obr := iotest.OneByteReader(c)
+
+	out, err := ioutil.ReadAll(obr)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if !bytes.Equal(buf[:n], msg) {
-		t.Fatal("got wrong message", buf[:n], msg)
+	if !bytes.Equal(out, msg) {
+		t.Fatal("got wrong message", out, msg)
 	}
 }

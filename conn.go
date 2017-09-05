@@ -1,6 +1,7 @@
 package websocket
 
 import (
+	"io"
 	"net"
 	"time"
 
@@ -14,15 +15,54 @@ type Conn struct {
 	*ws.Conn
 	DefaultMessageType int
 	done               func()
+	reader             io.Reader
 }
 
-func (c *Conn) Read(b []byte) (n int, err error) {
-	_, r, err := c.Conn.NextReader()
-	if err != nil {
-		return 0, err
+func (c *Conn) Read(b []byte) (int, error) {
+	if c.reader == nil {
+		if err := c.prepNextReader(); err != nil {
+			return 0, err
+		}
 	}
 
-	return r.Read(b)
+	for {
+		n, err := c.reader.Read(b)
+		switch err {
+		case io.EOF:
+			c.reader = nil
+
+			if n > 0 {
+				return n, nil
+			}
+
+			if err := c.prepNextReader(); err != nil {
+				return 0, err
+			}
+
+			// explicitly looping
+		default:
+			return n, err
+		}
+	}
+}
+
+func (c *Conn) prepNextReader() error {
+	t, r, err := c.Conn.NextReader()
+	if err != nil {
+		if wserr, ok := err.(*ws.CloseError); ok {
+			if wserr.Code == 1000 || wserr.Code == 1005 {
+				return io.EOF
+			}
+		}
+		return err
+	}
+
+	if t == ws.CloseMessage {
+		return io.EOF
+	}
+
+	c.reader = r
+	return nil
 }
 
 func (c *Conn) Write(b []byte) (n int, err error) {
@@ -38,15 +78,16 @@ func (c *Conn) Close() error {
 		c.done()
 	}
 
+	c.Conn.WriteMessage(ws.CloseMessage, nil)
 	return c.Conn.Close()
 }
 
 func (c *Conn) LocalAddr() net.Addr {
-	return c.Conn.LocalAddr()
+	return NewAddr(c.Conn.LocalAddr().String())
 }
 
 func (c *Conn) RemoteAddr() net.Addr {
-	return c.Conn.RemoteAddr()
+	return NewAddr(c.Conn.RemoteAddr().String())
 }
 
 func (c *Conn) SetDeadline(t time.Time) error {
