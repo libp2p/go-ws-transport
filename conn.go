@@ -1,6 +1,7 @@
 package websocket
 
 import (
+	"io"
 	"net"
 	"time"
 
@@ -14,15 +15,37 @@ type Conn struct {
 	*ws.Conn
 	DefaultMessageType int
 	done               func()
+	reader             io.Reader
 }
 
-func (c *Conn) Read(b []byte) (n int, err error) {
-	_, r, err := c.Conn.NextReader()
-	if err != nil {
-		return 0, err
+func (c *Conn) Read(b []byte) (int, error) {
+	if c.reader == nil {
+		if err := c.prepNextReader(); err != nil {
+			return 0, err
+		}
 	}
 
-	return r.Read(b)
+	n, err := c.reader.Read(b)
+	if err == io.EOF {
+		if err := c.prepNextReader(); err != nil {
+			return 0, err
+		}
+		if n == 0 {
+			n, err = c.reader.Read(b)
+		}
+	}
+
+	return n, err
+}
+
+func (c *Conn) prepNextReader() error {
+	_, r, err := c.Conn.NextReader()
+	if err != nil {
+		return err
+	}
+
+	c.reader = r
+	return nil
 }
 
 func (c *Conn) Write(b []byte) (n int, err error) {
@@ -42,11 +65,11 @@ func (c *Conn) Close() error {
 }
 
 func (c *Conn) LocalAddr() net.Addr {
-	return c.Conn.LocalAddr()
+	return NewAddr(c.Conn.LocalAddr().String())
 }
 
 func (c *Conn) RemoteAddr() net.Addr {
-	return c.Conn.RemoteAddr()
+	return NewAddr(c.Conn.RemoteAddr().String())
 }
 
 func (c *Conn) SetDeadline(t time.Time) error {
