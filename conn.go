@@ -25,23 +25,40 @@ func (c *Conn) Read(b []byte) (int, error) {
 		}
 	}
 
-	n, err := c.reader.Read(b)
-	if err == io.EOF {
-		if err := c.prepNextReader(); err != nil {
-			return 0, err
-		}
-		if n == 0 {
-			n, err = c.reader.Read(b)
+	for {
+		n, err := c.reader.Read(b)
+		switch err {
+		case io.EOF:
+			c.reader = nil
+
+			if n > 0 {
+				return n, nil
+			}
+
+			if err := c.prepNextReader(); err != nil {
+				return 0, err
+			}
+
+			// explicitly looping
+		default:
+			return n, err
 		}
 	}
-
-	return n, err
 }
 
 func (c *Conn) prepNextReader() error {
-	_, r, err := c.Conn.NextReader()
+	t, r, err := c.Conn.NextReader()
 	if err != nil {
+		if wserr, ok := err.(*ws.CloseError); ok {
+			if wserr.Code == 1000 || wserr.Code == 1005 {
+				return io.EOF
+			}
+		}
 		return err
+	}
+
+	if t == ws.CloseMessage {
+		return io.EOF
 	}
 
 	c.reader = r
@@ -61,6 +78,7 @@ func (c *Conn) Close() error {
 		c.done()
 	}
 
+	c.Conn.WriteMessage(ws.CloseMessage, nil)
 	return c.Conn.Close()
 }
 
