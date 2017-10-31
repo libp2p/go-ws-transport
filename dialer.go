@@ -21,7 +21,9 @@ func (d *dialer) DialContext(ctx context.Context, raddr ma.Multiaddr) (tpt.Conn,
 		return nil, err
 	}
 
-	wscon, _, err := ws.DefaultDialer.Dial(wsurl, nil)
+	wsdialer := &ws.Dialer{}
+
+	wscon, _, err := wsdialer.Dial(wsurl, nil)
 	if err != nil {
 		return nil, err
 	}
