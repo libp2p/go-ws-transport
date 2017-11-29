@@ -54,6 +54,7 @@ func (l *listener) Accept() (tpt.Conn, error) {
 
 	mnc, err := manet.WrapNetConn(c)
 	if err != nil {
+		c.Close()
 		return nil, err
 	}
 
