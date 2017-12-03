@@ -28,6 +28,7 @@ func (d *dialer) DialContext(ctx context.Context, raddr ma.Multiaddr) (tpt.Conn,
 
 	mnc, err := manet.WrapNetConn(NewConn(wscon, nil))
 	if err != nil {
+		wscon.Close()
 		return nil, err
 	}
 
