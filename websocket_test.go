@@ -2,13 +2,56 @@ package websocket
 
 import (
 	"bytes"
+	"context"
 	"io"
 	"io/ioutil"
 	"testing"
 	"testing/iotest"
 
+	insecure "github.com/libp2p/go-conn-security/insecure"
+	tptu "github.com/libp2p/go-libp2p-transport-upgrader"
+	utils "github.com/libp2p/go-libp2p-transport/test"
 	ma "github.com/multiformats/go-multiaddr"
+	mplex "github.com/whyrusleeping/go-smux-multiplex"
 )
+
+func TestCanDial(t *testing.T) {
+	addrWs, err := ma.NewMultiaddr("/ip4/127.0.0.1/tcp/5555/ws")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	addrTCP, err := ma.NewMultiaddr("/ip4/127.0.0.1/tcp/5555")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	d := &WebsocketTransport{}
+	matchTrue := d.CanDial(addrWs)
+	matchFalse := d.CanDial(addrTCP)
+
+	if !matchTrue {
+		t.Fatal("expected to match websocket maddr, but did not")
+	}
+
+	if matchFalse {
+		t.Fatal("expected to not match tcp maddr, but did")
+	}
+}
+
+func TestWebsocketTransport(t *testing.T) {
+	ta := New(&tptu.Upgrader{
+		Secure: insecure.New("peerA"),
+		Muxer:  new(mplex.Transport),
+	})
+	tb := New(&tptu.Upgrader{
+		Secure: insecure.New("peerB"),
+		Muxer:  new(mplex.Transport),
+	})
+
+	zero := "/ip4/127.0.0.1/tcp/0/ws"
+	utils.SubtestTransport(t, ta, tb, zero, "peerA")
+}
 
 func TestWebsocketListen(t *testing.T) {
 	zero, err := ma.NewMultiaddr("/ip4/127.0.0.1/tcp/0/ws")
@@ -17,7 +60,7 @@ func TestWebsocketListen(t *testing.T) {
 	}
 
 	tpt := &WebsocketTransport{}
-	l, err := tpt.Listen(zero)
+	l, err := tpt.maListen(zero)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -26,8 +69,7 @@ func TestWebsocketListen(t *testing.T) {
 	msg := []byte("HELLO WORLD")
 
 	go func() {
-		d, _ := tpt.Dialer(nil)
-		c, err := d.Dial(l.Multiaddr())
+		c, err := tpt.maDial(context.Background(), l.Multiaddr())
 		if err != nil {
 			t.Error(err)
 			return
@@ -62,7 +104,7 @@ func TestConcurrentClose(t *testing.T) {
 	}
 
 	tpt := &WebsocketTransport{}
-	l, err := tpt.Listen(zero)
+	l, err := tpt.maListen(zero)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -71,9 +113,8 @@ func TestConcurrentClose(t *testing.T) {
 	msg := []byte("HELLO WORLD")
 
 	go func() {
-		d, _ := tpt.Dialer(nil)
 		for i := 0; i < 100; i++ {
-			c, err := d.Dial(l.Multiaddr())
+			c, err := tpt.maDial(context.Background(), l.Multiaddr())
 			if err != nil {
 				t.Error(err)
 				return
@@ -100,7 +141,7 @@ func TestWriteZero(t *testing.T) {
 	}
 
 	tpt := &WebsocketTransport{}
-	l, err := tpt.Listen(zero)
+	l, err := tpt.maListen(zero)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -109,8 +150,7 @@ func TestWriteZero(t *testing.T) {
 	msg := []byte(nil)
 
 	go func() {
-		d, _ := tpt.Dialer(nil)
-		c, err := d.Dial(l.Multiaddr())
+		c, err := tpt.maDial(context.Background(), l.Multiaddr())
 		defer c.Close()
 		if err != nil {
 			t.Error(err)
