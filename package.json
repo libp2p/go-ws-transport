@@ -54,6 +54,12 @@
       "hash": "QmdbjG1eui2spsiFLmBjmET6N9c4wfpDzAoKFyN72935Ec",
       "name": "go-libp2p-transport-upgrader",
       "version": "0.1.2"
+    },
+    {
+      "author": "whyrusleeping",
+      "hash": "QmVf8hTAsLLFtn4WPCRNdnaF2Eag2qTBS6uR8AiHPZARXy",
+      "name": "go-libp2p-peer",
+      "version": "2.3.4"
     }
   ],
   "gxVersion": "0.4.0",
