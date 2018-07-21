@@ -51,9 +51,9 @@
     },
     {
       "author": "steb",
-      "hash": "QmbzWHWFpwCm7GDgrGyKnqUzh48PnRp86VD2Bb8wq6ZfDP",
+      "hash": "Qma7AuxEA7dd1wAy95hTxXgxy4q7mU4Pyd1x4PRAzGP1fs",
       "name": "go-libp2p-transport-upgrader",
-      "version": "0.1.4"
+      "version": "0.1.5"
     },
     {
       "author": "whyrusleeping",
@@ -67,6 +67,6 @@
   "license": "MIT",
   "name": "go-ws-transport",
   "releaseCmd": "git commit -a -m \"gx publish $VERSION\"",
-  "version": "2.0.4"
+  "version": "2.0.5"
 }
 
