@@ -21,9 +21,9 @@
     },
     {
       "author": "whyrusleeping",
-      "hash": "QmYr9RHifaqHTFZdAsUPLmiMAi2oNeEqA48AFKxXJAsLpJ",
+      "hash": "QmcDUyb52N62J8ZamGgUWUyWc1MtuCBce7WFA4D9xA6cwF",
       "name": "go-libp2p-transport",
-      "version": "3.0.7"
+      "version": "3.0.8"
     },
     {
       "author": "gorilla",
@@ -39,9 +39,9 @@
     },
     {
       "author": "Stebalien",
-      "hash": "QmcGgFLHMFLcNMMvxsBC5LeLqubLR5djxjShVU3koVMtVq",
+      "hash": "QmNPQvc3jUA7L6oHB8en9PittPGazFMdoveN2oycHL6yWF",
       "name": "go-conn-security",
-      "version": "0.1.7"
+      "version": "0.1.8"
     },
     {
       "author": "whyrusleeping",
@@ -51,9 +51,9 @@
     },
     {
       "author": "steb",
-      "hash": "QmfNvpHX396fhMeauERV6eFnSJg78rUjhjpFf1JvbjxaYM",
+      "hash": "QmefQrpDSYX6jQRtUyhcASFVBDkoAsDTPXemyxGMzA3phK",
       "name": "go-libp2p-transport-upgrader",
-      "version": "0.1.7"
+      "version": "0.1.8"
     },
     {
       "author": "whyrusleeping",
