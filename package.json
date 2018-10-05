@@ -45,15 +45,15 @@
     },
     {
       "author": "whyrusleeping",
-      "hash": "QmYsbnP57nNUKWijs8o2q3ZFrSUcAGTdKoQPuSJC3Uxt1Y",
+      "hash": "QmQvMxiavoMJzuLPuqrzVX4nXZpMks29hqpv13d81aJNEF",
       "name": "go-smux-multiplex",
-      "version": "3.0.13"
+      "version": "3.0.15"
     },
     {
       "author": "steb",
-      "hash": "QmQkCDQnrQgS2StMmLhro8Bd9LxRQXrysq27cj7hPxEvsb",
+      "hash": "QmXffKE4ikCV3medQiCzbzuoE5QUuLd2rGr4EyiC6b9Mye",
       "name": "go-libp2p-transport-upgrader",
-      "version": "0.1.12"
+      "version": "0.1.13"
     },
     {
       "author": "whyrusleeping",
@@ -67,6 +67,6 @@
   "license": "MIT",
   "name": "go-ws-transport",
   "releaseCmd": "git commit -a -m \"gx publish $VERSION\"",
-  "version": "2.0.12"
+  "version": "2.0.13"
 }
 
