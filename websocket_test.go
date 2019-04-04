@@ -75,8 +75,14 @@ func TestWebsocketListen(t *testing.T) {
 			return
 		}
 
-		c.Write(msg)
-		c.Close()
+		_, err = c.Write(msg)
+		if err != nil {
+			t.Error(err)
+		}
+		err = c.Close()
+		if err != nil {
+			t.Error(err)
+		}
 	}()
 
 	c, err := l.Accept()
@@ -120,8 +126,12 @@ func TestConcurrentClose(t *testing.T) {
 				return
 			}
 
-			go c.Write(msg)
-			go c.Close()
+			go func() {
+				_, _ = c.Write(msg)
+			}()
+			go func() {
+				_ = c.Close()
+			}()
 		}
 	}()
 
