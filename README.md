@@ -13,9 +13,13 @@
 ## Install
 
 ```sh
-> gx install --global
-> gx-go rewrite
+> go get github.com/libp2p/go-ws-transport
 ```
+
+This repo is [gomod](https://github.com/golang/go/wiki/Modules)-compatible, and users of
+go 1.11 and later with modules enabled will automatically pull the latest tagged release
+by referencing this package. Upgrades to future releases can be managed using `go get`,
+or by editing your `go.mod` file as [described by the gomod documentation](https://github.com/golang/go/wiki/Modules#how-to-upgrade-and-downgrade-dependencies).
 
 ## Usage
 
