@@ -76,12 +76,12 @@ github.com/libp2p/go-libp2p-protocol v0.0.1/go.mod h1:Af9n4PiruirSDjHycM1QuiMi/1
 github.com/libp2p/go-libp2p-transport v0.0.1/go.mod h1:UzbUs9X+PHOSw7S3ZmeOxfnwaQY5vGDzZmKPod3N3tk=
 github.com/libp2p/go-libp2p-transport v0.0.4 h1:/CPHQMN75/IQwkhBxxIo6p6PtL3rwFZtlzBROT3e8mw=
 github.com/libp2p/go-libp2p-transport v0.0.4/go.mod h1:StoY3sx6IqsP6XKoabsPnHCwqKXWUMWU7Rfcsubee/A=
-github.com/libp2p/go-libp2p-transport-upgrader v0.0.1 h1:rNtXkY6dty46mxYOHHAZQchI7gQdJStF683FhVnei/k=
-github.com/libp2p/go-libp2p-transport-upgrader v0.0.1/go.mod h1:NJpUAgQab/8K6K0m+JmZCe5RUXG10UMEx4kWe9Ipj5c=
+github.com/libp2p/go-libp2p-transport-upgrader v0.0.3 h1:ZcXhGEMnv8f+ycqVl/9mnIe6uhUYy0aj/vEYQUoG7xU=
+github.com/libp2p/go-libp2p-transport-upgrader v0.0.3/go.mod h1:Ng1HzfMIopyYscMHNFmJqiMMcpgDlj0t+NyjVWW89ws=
 github.com/libp2p/go-maddr-filter v0.0.1 h1:apvYTg0aIxxQyBX+XHKOR+0+lYhGs1Yv+JmTH9nyl5I=
 github.com/libp2p/go-maddr-filter v0.0.1/go.mod h1:6eT12kSQMA9x2pvFQa+xesMKUBlj9VImZbj3B9FBH/Q=
-github.com/libp2p/go-mplex v0.0.1 h1:dn2XGSrUxLtz3/8u85bGrwhUEKPX8MOF3lpmcWBZCWc=
-github.com/libp2p/go-mplex v0.0.1/go.mod h1:pK5yMLmOoBR1pNCqDlA2GQrdAVTMkqFalaTWe7l4Yd0=
+github.com/libp2p/go-mplex v0.0.3 h1:YiMaevQcZtFU6DmKIF8xEO0vaui5kM5HJ1V1xkWQv14=
+github.com/libp2p/go-mplex v0.0.3/go.mod h1:pK5yMLmOoBR1pNCqDlA2GQrdAVTMkqFalaTWe7l4Yd0=
 github.com/libp2p/go-stream-muxer v0.0.1 h1:Ce6e2Pyu+b5MC1k3eeFtAax0pW4gc6MosYSLV05UeLw=
 github.com/libp2p/go-stream-muxer v0.0.1/go.mod h1:bAo8x7YkSpadMTbtTaxGVHWUQsR/l5MEaHbKaliuT14=
 github.com/mattn/go-colorable v0.1.1 h1:G1f5SKeVxmagw/IyvzvtZE4Gybcc4Tr1tf7I8z0XgOg=
@@ -120,8 +120,8 @@ github.com/syndtr/goleveldb v1.0.0/go.mod h1:ZVVdQEZoIme9iO1Ch2Jdy24qqXrMMOU6lpP
 github.com/whyrusleeping/go-keyspace v0.0.0-20160322163242-5b898ac5add1/go.mod h1:8UvriyWtv5Q5EOgjHaSseUEdkQfvwFv1I/In/O2M9gc=
 github.com/whyrusleeping/go-logging v0.0.0-20170515211332-0457bb6b88fc h1:9lDbC6Rz4bwmou+oE6Dt4Cb2BGMur5eR/GYptkKUVHo=
 github.com/whyrusleeping/go-logging v0.0.0-20170515211332-0457bb6b88fc/go.mod h1:bopw91TMyo8J3tvftk8xmU2kPmlrt4nScJQZU2hE5EM=
-github.com/whyrusleeping/go-smux-multiplex v3.0.16+incompatible h1:iqksILj8STw03EJQe7Laj4ubnw+ojOyik18cd5vPL1o=
-github.com/whyrusleeping/go-smux-multiplex v3.0.16+incompatible/go.mod h1:34LEDbeKFZInPUrAG+bjuJmUXONGdEFW7XL0SpTY1y4=
+github.com/whyrusleeping/go-smux-multiplex v0.1.0 h1:23qGy3Z16UeiMh/BTiRe6pRm7MlvF5EM2873uFTQbro=
+github.com/whyrusleeping/go-smux-multiplex v0.1.0/go.mod h1:OXL5hggHNZSsadXDlBJDD4eD3IQYEB3Yu6xpovd6pPw=
 github.com/whyrusleeping/mafmt v1.2.8 h1:TCghSl5kkwEE0j+sU/gudyhVMRlpBin8fMBBHg59EbA=
 github.com/whyrusleeping/mafmt v1.2.8/go.mod h1:faQJFPbLSxzD9xpA02ttW/tS9vZykNvXwGvqIpk20FA=
 golang.org/x/crypto v0.0.0-20170930174604-9419663f5a44/go.mod h1:6SG95UA2DQfeDnfUPMdvaQW0Q7yPrPDi9nlGo2tz2b4=
