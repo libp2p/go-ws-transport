@@ -78,8 +78,8 @@ github.com/libp2p/go-libp2p-protocol v0.0.1/go.mod h1:Af9n4PiruirSDjHycM1QuiMi/1
 github.com/libp2p/go-libp2p-transport v0.0.1/go.mod h1:UzbUs9X+PHOSw7S3ZmeOxfnwaQY5vGDzZmKPod3N3tk=
 github.com/libp2p/go-libp2p-transport v0.0.5 h1:pV6+UlRxyDpASSGD+60vMvdifSCby6JkJDfi+yUMHac=
 github.com/libp2p/go-libp2p-transport v0.0.5/go.mod h1:StoY3sx6IqsP6XKoabsPnHCwqKXWUMWU7Rfcsubee/A=
-github.com/libp2p/go-libp2p-transport-upgrader v0.0.3 h1:ZcXhGEMnv8f+ycqVl/9mnIe6uhUYy0aj/vEYQUoG7xU=
-github.com/libp2p/go-libp2p-transport-upgrader v0.0.3/go.mod h1:Ng1HzfMIopyYscMHNFmJqiMMcpgDlj0t+NyjVWW89ws=
+github.com/libp2p/go-libp2p-transport-upgrader v0.0.4 h1:uGMOd14BL1oFlfb/cGfOxPjiTKBhzWV4aMjjoCF1Z1o=
+github.com/libp2p/go-libp2p-transport-upgrader v0.0.4/go.mod h1:RGq+tupk+oj7PzL2kn/m1w6YXxcIAYJYeI90h6BGgUc=
 github.com/libp2p/go-maddr-filter v0.0.1 h1:apvYTg0aIxxQyBX+XHKOR+0+lYhGs1Yv+JmTH9nyl5I=
 github.com/libp2p/go-maddr-filter v0.0.1/go.mod h1:6eT12kSQMA9x2pvFQa+xesMKUBlj9VImZbj3B9FBH/Q=
 github.com/libp2p/go-mplex v0.0.3 h1:YiMaevQcZtFU6DmKIF8xEO0vaui5kM5HJ1V1xkWQv14=
@@ -122,8 +122,6 @@ github.com/syndtr/goleveldb v1.0.0/go.mod h1:ZVVdQEZoIme9iO1Ch2Jdy24qqXrMMOU6lpP
 github.com/whyrusleeping/go-keyspace v0.0.0-20160322163242-5b898ac5add1/go.mod h1:8UvriyWtv5Q5EOgjHaSseUEdkQfvwFv1I/In/O2M9gc=
 github.com/whyrusleeping/go-logging v0.0.0-20170515211332-0457bb6b88fc h1:9lDbC6Rz4bwmou+oE6Dt4Cb2BGMur5eR/GYptkKUVHo=
 github.com/whyrusleeping/go-logging v0.0.0-20170515211332-0457bb6b88fc/go.mod h1:bopw91TMyo8J3tvftk8xmU2kPmlrt4nScJQZU2hE5EM=
-github.com/whyrusleeping/go-smux-multiplex v0.1.0 h1:23qGy3Z16UeiMh/BTiRe6pRm7MlvF5EM2873uFTQbro=
-github.com/whyrusleeping/go-smux-multiplex v0.1.0/go.mod h1:OXL5hggHNZSsadXDlBJDD4eD3IQYEB3Yu6xpovd6pPw=
 github.com/whyrusleeping/mafmt v1.2.8 h1:TCghSl5kkwEE0j+sU/gudyhVMRlpBin8fMBBHg59EbA=
 github.com/whyrusleeping/mafmt v1.2.8/go.mod h1:faQJFPbLSxzD9xpA02ttW/tS9vZykNvXwGvqIpk20FA=
 golang.org/x/crypto v0.0.0-20170930174604-9419663f5a44/go.mod h1:6SG95UA2DQfeDnfUPMdvaQW0Q7yPrPDi9nlGo2tz2b4=
