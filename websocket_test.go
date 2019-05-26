@@ -8,10 +8,11 @@ import (
 	"testing"
 	"testing/iotest"
 
-	insecure "github.com/libp2p/go-conn-security/insecure"
+	"github.com/libp2p/go-libp2p-core/sec/insecure"
+
 	mplex "github.com/libp2p/go-libp2p-mplex"
+	ttransport "github.com/libp2p/go-libp2p-testing/suites/transport"
 	tptu "github.com/libp2p/go-libp2p-transport-upgrader"
-	utils "github.com/libp2p/go-libp2p-transport/test"
 	ma "github.com/multiformats/go-multiaddr"
 )
 
@@ -50,7 +51,7 @@ func TestWebsocketTransport(t *testing.T) {
 	})
 
 	zero := "/ip4/127.0.0.1/tcp/0/ws"
-	utils.SubtestTransport(t, ta, tb, zero, "peerA")
+	ttransport.SubtestTransport(t, ta, tb, zero, "peerA")
 }
 
 func TestWebsocketListen(t *testing.T) {
