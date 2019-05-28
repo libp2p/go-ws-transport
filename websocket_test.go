@@ -21,6 +21,10 @@ func TestCanDial(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	addrWss, err := ma.NewMultiaddr("/dnsaddr/example.com/tcp/5555/wss")
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	addrTCP, err := ma.NewMultiaddr("/ip4/127.0.0.1/tcp/5555")
 	if err != nil {
@@ -29,10 +33,14 @@ func TestCanDial(t *testing.T) {
 
 	d := &WebsocketTransport{}
 	matchTrue := d.CanDial(addrWs)
+	matchTrueWss := d.CanDial(addrWss)
 	matchFalse := d.CanDial(addrTCP)
 
 	if !matchTrue {
 		t.Fatal("expected to match websocket maddr, but did not")
+	}
+	if !matchTrueWss {
+		t.Fatal("expected to match websocket+tls maddr, but did not")
 	}
 
 	if matchFalse {
@@ -51,6 +59,20 @@ func TestWebsocketTransport(t *testing.T) {
 	})
 
 	zero := "/ip4/127.0.0.1/tcp/0/ws"
+	ttransport.SubtestTransport(t, ta, tb, zero, "peerA")
+}
+
+func TestWebsocketTransport6(t *testing.T) {
+	ta := New(&tptu.Upgrader{
+		Secure: insecure.New("peerA"),
+		Muxer:  new(mplex.Transport),
+	})
+	tb := New(&tptu.Upgrader{
+		Secure: insecure.New("peerB"),
+		Muxer:  new(mplex.Transport),
+	})
+
+	zero := "/ip6/::1/tcp/0/ws"
 	ttransport.SubtestTransport(t, ta, tb, zero, "peerA")
 }
 

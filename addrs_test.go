@@ -20,6 +20,19 @@ func TestMultiaddrParsing(t *testing.T) {
 	if wsaddr != "ws://127.0.0.1:5555" {
 		t.Fatalf("expected ws://127.0.0.1:5555, got %s", wsaddr)
 	}
+
+	addr, err = ma.NewMultiaddr("/dnsaddr/example.com/tcp/5555/wss")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	wsaddr, err = parseMultiaddr(addr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if wsaddr != "wss://example.com:5555" {
+		t.Fatalf("expected wss://example.com:5555, got %s", wsaddr)
+	}
 }
 
 type httpAddr struct {
