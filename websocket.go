@@ -78,17 +78,20 @@ func init() {
 // WebsocketTransport is the actual go-libp2p transport
 type WebsocketTransport struct {
 	Upgrader *tptu.Upgrader
-	CertPool *x509.CertPool
+	CertCfg  *tls.Config
 }
 
 func New(u *tptu.Upgrader) *WebsocketTransport {
 	p, err := x509.SystemCertPool()
-	if err != nil {
-		p = x509.NewCertPool()
+	var cfg *tls.Config
+	if err == nil {
+		cfg = &tls.Config{RootCAs: p}
+	} else {
+		cfg = &tls.Config{RootCAs: nil, InsecureSkipVerify: true}
 	}
 	return &WebsocketTransport{
 		Upgrader: u,
-		CertPool: p,
+		CertCfg:  cfg,
 	}
 }
 
@@ -113,7 +116,6 @@ func (t *WebsocketTransport) maDial(ctx context.Context, raddr ma.Multiaddr) (ma
 	}
 
 	var wscon *ws.Conn
-
 	if raddr.Protocols()[2].Code == WsProtocol.Code {
 		wscon, _, err = ws.DefaultDialer.Dial(wsurl, nil)
 	} else {
@@ -127,8 +129,7 @@ func (t *WebsocketTransport) maDial(ctx context.Context, raddr ma.Multiaddr) (ma
 			// your milage may differ
 			"Sec-WebSocket-Extensions": {"permessage-deflate; client_max_window_bits, x-webkit-deflate-frame"},
 		}
-		cfg := &tls.Config{RootCAs: t.CertPool}
-		tlsconn, err := tls.Dial("tcp", u.Host, cfg)
+		tlsconn, err := tls.Dial("tcp", u.Host, t.CertCfg)
 		if err != nil {
 			return nil, err
 		}
