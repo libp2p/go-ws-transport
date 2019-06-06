@@ -4,7 +4,6 @@ package websocket
 import (
 	"context"
 	"crypto/tls"
-	"crypto/x509"
 	"fmt"
 	"net"
 	"net/http"
@@ -34,10 +33,10 @@ var WssProtocol = ma.Protocol{
 }
 
 // WsFmt is multiaddr formatter for WsProtocol
-var WsFmt = mafmt.Or(
-	mafmt.And(mafmt.TCP, mafmt.Base(WsProtocol.Code)),
-	mafmt.And(mafmt.And(mafmt.DNS, mafmt.Base(ma.P_TCP)), mafmt.Base(WssProtocol.Code)),
-)
+var WsFmt = mafmt.And(mafmt.TCP, mafmt.Or(
+		mafmt.Base(WsProtocol.Code),
+		mafmt.Base(WssProtocol.Code),
+))
 
 // WsCodec is the multiaddr-net codec definition for the websocket transport
 var WsCodec = &manet.NetCodec{
@@ -78,20 +77,11 @@ func init() {
 // WebsocketTransport is the actual go-libp2p transport
 type WebsocketTransport struct {
 	Upgrader *tptu.Upgrader
-	CertCfg  *tls.Config
 }
 
 func New(u *tptu.Upgrader) *WebsocketTransport {
-	p, err := x509.SystemCertPool()
-	var cfg *tls.Config
-	if err == nil {
-		cfg = &tls.Config{RootCAs: p}
-	} else {
-		cfg = &tls.Config{RootCAs: nil, InsecureSkipVerify: true}
-	}
 	return &WebsocketTransport{
 		Upgrader: u,
-		CertCfg:  cfg,
 	}
 }
 
@@ -108,6 +98,8 @@ func (t *WebsocketTransport) Protocols() []int {
 func (t *WebsocketTransport) Proxy() bool {
 	return false
 }
+
+var CertCfg *tls.Config = &tls.Config{RootCAs: nil, InsecureSkipVerify: true}
 
 func (t *WebsocketTransport) maDial(ctx context.Context, raddr ma.Multiaddr) (manet.Conn, error) {
 	wsurl, err := parseMultiaddr(raddr)
@@ -129,7 +121,7 @@ func (t *WebsocketTransport) maDial(ctx context.Context, raddr ma.Multiaddr) (ma
 			// your milage may differ
 			"Sec-WebSocket-Extensions": {"permessage-deflate; client_max_window_bits, x-webkit-deflate-frame"},
 		}
-		tlsconn, err := tls.Dial("tcp", u.Host, t.CertCfg)
+		tlsconn, err := tls.Dial("tcp", u.Host, CertCfg)
 		if err != nil {
 			return nil, err
 		}

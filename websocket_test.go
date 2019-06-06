@@ -3,10 +3,15 @@ package websocket
 import (
 	"bytes"
 	"context"
+	//"crypto/x509"
 	"io"
 	"io/ioutil"
 	"testing"
 	"testing/iotest"
+	/*"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
+*/
 
 	"github.com/libp2p/go-libp2p-core/sec/insecure"
 
@@ -21,7 +26,7 @@ func TestCanDial(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	addrWss, err := ma.NewMultiaddr("/dnsaddr/example.com/tcp/5555/wss")
+	addrWss, err := ma.NewMultiaddr("/ip4/127.0.0.1/tcp/5555/wss")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -216,3 +221,59 @@ func TestWriteZero(t *testing.T) {
 		t.Errorf("expected EOF, got err: %s", err)
 	}
 }
+/*
+func TestWebsocketSecureComplete(t *testing.T) {
+	var cert *[]byte
+
+	cert, _ = &CreateCertificate()
+
+	listen, err := ma.NewMultiaddr("/ip4/127.0.0.1/tcp/0/ws")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	tpt := &WebsocketTransport{}
+	l, err := tpt.maListen(zero)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer l.Close()
+	fmt.Printf("%+v\n", l)
+
+	msg := []byte("HELLO WORLD")
+
+	go func() {
+		c, err := tpt.maDial(context.Background(), l.Multiaddr())
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		_, err = c.Write(msg)
+		if err != nil {
+			t.Error(err)
+		}
+		err = c.Close()
+		if err != nil {
+			t.Error(err)
+		}
+	}()
+
+	c, err := l.Accept()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer c.Close()
+
+	obr := iotest.OneByteReader(c)
+
+	out, err := ioutil.ReadAll(obr)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !bytes.Equal(out, msg) {
+		t.Fatal("got wrong message", out, msg)
+	}
+}
+*/
