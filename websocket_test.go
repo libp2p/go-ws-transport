@@ -17,7 +17,7 @@ import (
 )
 
 func TestCanDial(t *testing.T) {
-	addrWs, err := ma.NewMultiaddr("/ip4/127.0.0.1/tcp/5555/ws")
+	addrWs, err := ma.NewMultiaddr("/ip4/127.0.0.1/tcp/5555/ws/libp2pEnpoint")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -50,12 +50,12 @@ func TestWebsocketTransport(t *testing.T) {
 		Muxer:  new(mplex.Transport),
 	})
 
-	zero := "/ip4/127.0.0.1/tcp/0/ws"
+	zero := "/ip4/127.0.0.1/tcp/0/ws/libp2pEnpoint"
 	ttransport.SubtestTransport(t, ta, tb, zero, "peerA")
 }
 
 func TestWebsocketListen(t *testing.T) {
-	zero, err := ma.NewMultiaddr("/ip4/127.0.0.1/tcp/0/ws")
+	zero, err := ma.NewMultiaddr("/ip4/127.0.0.1/tcp/0/ws/libp2pEnpoint")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -105,7 +105,7 @@ func TestWebsocketListen(t *testing.T) {
 }
 
 func TestConcurrentClose(t *testing.T) {
-	zero, err := ma.NewMultiaddr("/ip4/127.0.0.1/tcp/0/ws")
+	zero, err := ma.NewMultiaddr("/ip4/127.0.0.1/tcp/0/ws/libp2pEnpoint")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -146,7 +146,7 @@ func TestConcurrentClose(t *testing.T) {
 }
 
 func TestWriteZero(t *testing.T) {
-	zero, err := ma.NewMultiaddr("/ip4/127.0.0.1/tcp/0/ws")
+	zero, err := ma.NewMultiaddr("/ip4/127.0.0.1/tcp/0/ws/libp2pEnpoint")
 	if err != nil {
 		t.Fatal(err)
 	}

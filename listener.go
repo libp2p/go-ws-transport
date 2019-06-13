@@ -31,18 +31,20 @@ func (l *listener) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	select {
-	case l.incoming <- NewConn(c):
+	case l.incoming <- NewConn(c, r.URL.Path):
 	case <-l.closed:
 		c.Close()
 	}
 	// The connection has been hijacked, it's safe to return.
 }
 
+var listenerClosedError = fmt.Errorf("listener is closed")
+
 func (l *listener) Accept() (manet.Conn, error) {
 	select {
 	case c, ok := <-l.incoming:
 		if !ok {
-			return nil, fmt.Errorf("listener is closed")
+			return nil, listenerClosedError
 		}
 
 		mnc, err := manet.WrapNetConn(c)
@@ -53,7 +55,7 @@ func (l *listener) Accept() (manet.Conn, error) {
 
 		return mnc, nil
 	case <-l.closed:
-		return nil, fmt.Errorf("listener is closed")
+		return nil, listenerClosedError
 	}
 }
 

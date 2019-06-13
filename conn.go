@@ -21,6 +21,7 @@ type Conn struct {
 	DefaultMessageType int
 	reader             io.Reader
 	closeOnce          sync.Once
+	Path               string
 }
 
 func (c *Conn) Read(b []byte) (int, error) {
@@ -97,11 +98,11 @@ func (c *Conn) Close() error {
 }
 
 func (c *Conn) LocalAddr() net.Addr {
-	return NewAddr(c.Conn.LocalAddr().String())
+	return NewAddr(c.Conn.LocalAddr().String(), c.Path)
 }
 
 func (c *Conn) RemoteAddr() net.Addr {
-	return NewAddr(c.Conn.RemoteAddr().String())
+	return NewAddr(c.Conn.RemoteAddr().String(), c.Path)
 }
 
 func (c *Conn) SetDeadline(t time.Time) error {
@@ -121,9 +122,10 @@ func (c *Conn) SetWriteDeadline(t time.Time) error {
 }
 
 // NewConn creates a Conn given a regular gorilla/websocket Conn.
-func NewConn(raw *ws.Conn) *Conn {
+func NewConn(raw *ws.Conn, path string) *Conn {
 	return &Conn{
 		Conn:               raw,
 		DefaultMessageType: ws.BinaryMessage,
+		Path:               path,
 	}
 }

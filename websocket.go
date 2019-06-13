@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/libp2p/go-libp2p-core/peer"
 	"github.com/libp2p/go-libp2p-core/transport"
@@ -15,15 +16,31 @@ import (
 
 	ws "github.com/gorilla/websocket"
 	ma "github.com/multiformats/go-multiaddr"
+	mafmt "github.com/multiformats/go-multiaddr-fmt"
 	manet "github.com/multiformats/go-multiaddr-net"
-	mafmt "github.com/whyrusleeping/mafmt"
 )
+
+// WsEndpointTranscoder use the vanilla []byte(s)
+var WsTranscoder = ma.NewTranscoderFromFunctions(wsStB, wsBtS, nil)
+
+func wsStB(s string) ([]byte, error) {
+	if strings.Contains(s, "/") {
+		return nil, fmt.Errorf("Endpoint must be under root, not %s", s)
+	}
+
+	return []byte(s), nil
+}
+func wsBtS(b []byte) (string, error) {
+	return string(b), nil
+}
 
 // WsProtocol is the multiaddr protocol definition for this transport.
 var WsProtocol = ma.Protocol{
-	Code:  477,
-	Name:  "ws",
-	VCode: ma.CodeToVarint(477),
+	Code:       477,
+	Name:       "ws",
+	VCode:      ma.CodeToVarint(477),
+	Size:       -1,
+	Transcoder: WsTranscoder,
 }
 
 // WsFmt is multiaddr formatter for WsProtocol
@@ -88,7 +105,12 @@ func (t *WebsocketTransport) maDial(ctx context.Context, raddr ma.Multiaddr) (ma
 		return nil, err
 	}
 
-	mnc, err := manet.WrapNetConn(NewConn(wscon))
+	path, err := raddr.ValueForProtocol(WsProtocol.Code)
+	if err != nil {
+		return nil, err
+	}
+
+	mnc, err := manet.WrapNetConn(NewConn(wscon, path))
 	if err != nil {
 		wscon.Close()
 		return nil, err
@@ -115,7 +137,12 @@ func (t *WebsocketTransport) maListen(a ma.Multiaddr) (manet.Listener, error) {
 		return nil, err
 	}
 
-	u, err := url.Parse("http://" + nl.Addr().String())
+	path, err := a.ValueForProtocol(WsProtocol.Code)
+	if err != nil {
+		return nil, err
+	}
+
+	u, err := url.Parse("http://" + nl.Addr().String() + "/" + path)
 	if err != nil {
 		nl.Close()
 		return nil, err
@@ -145,7 +172,7 @@ func (t *WebsocketTransport) wrapListener(l net.Listener, origin *url.URL) (*lis
 	if err != nil {
 		return nil, err
 	}
-	wsma, err := ma.NewMultiaddr("/ws")
+	wsma, err := ma.NewMultiaddr("/ws" + origin.Path)
 	if err != nil {
 		return nil, err
 	}

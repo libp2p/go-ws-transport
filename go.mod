@@ -7,6 +7,7 @@ require (
 	github.com/libp2p/go-libp2p-testing v0.0.3
 	github.com/libp2p/go-libp2p-transport-upgrader v0.1.1
 	github.com/multiformats/go-multiaddr v0.0.4
+	github.com/multiformats/go-multiaddr-fmt v0.0.1
 	github.com/multiformats/go-multiaddr-net v0.0.1
 	github.com/whyrusleeping/mafmt v1.2.8
 )

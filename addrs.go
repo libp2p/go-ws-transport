@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"net/url"
+	"strings"
 
 	ma "github.com/multiformats/go-multiaddr"
 	manet "github.com/multiformats/go-multiaddr-net"
@@ -22,10 +23,11 @@ func (addr *Addr) Network() string {
 }
 
 // NewAddr creates a new Addr using the given host string
-func NewAddr(host string) *Addr {
+func NewAddr(host string, path string) *Addr {
 	return &Addr{
 		URL: &url.URL{
 			Host: host,
+			Path: path,
 		},
 	}
 }
@@ -35,14 +37,32 @@ func ConvertWebsocketMultiaddrToNetAddr(maddr ma.Multiaddr) (net.Addr, error) {
 	if err != nil {
 		return nil, err
 	}
+	path, err := maddr.ValueForProtocol(WsProtocol.Code)
+	if err != nil {
+		return nil, err
+	}
 
-	return NewAddr(host), nil
+	return NewAddr(host, path), nil
 }
+
+var notWebsocketError = fmt.Errorf("not a websocket address")
 
 func ParseWebsocketNetAddr(a net.Addr) (ma.Multiaddr, error) {
 	wsa, ok := a.(*Addr)
 	if !ok {
-		return nil, fmt.Errorf("not a websocket address")
+		return nil, notWebsocketError
+	}
+
+	pathl := strings.SplitN(wsa.Path, "/", 2)
+	path := ""
+	if len(pathl) == 1 {
+		path = wsa.Path
+	} else {
+		path = pathl[1]
+	}
+
+	if strings.Contains(path, "/") {
+		return nil, fmt.Errorf("Endpoint must be under root, not %s", path)
 	}
 
 	tcpaddr, err := net.ResolveTCPAddr("tcp", wsa.Host)
@@ -55,7 +75,7 @@ func ParseWebsocketNetAddr(a net.Addr) (ma.Multiaddr, error) {
 		return nil, err
 	}
 
-	wsma, err := ma.NewMultiaddr("/ws")
+	wsma, err := ma.NewMultiaddr("/ws/" + path)
 	if err != nil {
 		return nil, err
 	}
@@ -69,5 +89,10 @@ func parseMultiaddr(a ma.Multiaddr) (string, error) {
 		return "", err
 	}
 
-	return "ws://" + host, nil
+	endpoint, err := a.ValueForProtocol(WsProtocol.Code)
+	if err != nil {
+		return "", err
+	}
+
+	return "ws://" + host + "/" + endpoint, nil
 }
