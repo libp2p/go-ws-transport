@@ -3,6 +3,8 @@ package websocket
 import (
 	"bytes"
 	"context"
+	"github.com/libp2p/go-libp2p-core/crypto"
+	"github.com/libp2p/go-libp2p-core/peer"
 	"io"
 	"io/ioutil"
 	"testing"
@@ -41,17 +43,18 @@ func TestCanDial(t *testing.T) {
 }
 
 func TestWebsocketTransport(t *testing.T) {
+	ia := makeInsecureTransport(t)
 	ta := New(&tptu.Upgrader{
-		Secure: insecure.New("peerA"),
+		Secure: ia,
 		Muxer:  new(mplex.Transport),
 	})
 	tb := New(&tptu.Upgrader{
-		Secure: insecure.New("peerB"),
+		Secure: makeInsecureTransport(t),
 		Muxer:  new(mplex.Transport),
 	})
 
 	zero := "/ip4/127.0.0.1/tcp/0/ws"
-	ttransport.SubtestTransport(t, ta, tb, zero, "peerA")
+	ttransport.SubtestTransport(t, ta, tb, zero, ia.LocalPeer())
 }
 
 func TestWebsocketListen(t *testing.T) {
@@ -193,4 +196,16 @@ func TestWriteZero(t *testing.T) {
 	if err != io.EOF {
 		t.Errorf("expected EOF, got err: %s", err)
 	}
+}
+
+func makeInsecureTransport(t *testing.T) *insecure.Transport {
+	priv, pub, err := crypto.GenerateKeyPair(crypto.Ed25519, 256)
+	if err != nil {
+		t.Fatal(err)
+	}
+	id, err := peer.IDFromPublicKey(pub)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return insecure.NewWithIdentity(id, priv)
 }
