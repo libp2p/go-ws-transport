@@ -3,7 +3,6 @@ package websocket
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"io"
 	"net"
 	"strings"
@@ -40,11 +39,8 @@ func (c *Conn) Read(b []byte) (int, error) {
 	}
 
 	if c.currData == nil {
-		fmt.Println("Waiting for incoming data")
 		select {
 		case data := <-c.incomingData:
-			fmt.Println("Received new incoming data")
-			fmt.Println(string(data))
 			c.currData = bytes.NewBuffer(data)
 		case <-c.closeSignal:
 			return 0, io.EOF
@@ -62,19 +58,13 @@ func (c *Conn) Read(b []byte) (int, error) {
 func (c *Conn) checkOpen() error {
 	state := c.Get("readyState").Int()
 	switch state {
-	case webSocketStateOpen:
-		fmt.Println("readyState is open")
 	case webSocketStateClosed, webSocketStateClosing:
-		fmt.Println("readyState is closed or closing")
 		return errIsClosed
-	default:
-		fmt.Printf("readyState is %d\n", state)
 	}
 	return nil
 }
 
 func (c *Conn) Write(b []byte) (n int, err error) {
-	fmt.Println("Write was called")
 	// c.mut.Lock()
 	// defer c.mut.Unlock()
 	if err := c.checkOpen(); err != nil {
@@ -153,11 +143,7 @@ func (c *Conn) setUpHandlers() {
 			// should check binaryType and then decode accordingly.
 			blob := args[0].Get("data")
 			text := readBlob(blob)
-			fmt.Println("onmessage was triggered")
-			fmt.Println("received:", text)
-			fmt.Println("Sending to incomingData")
 			c.incomingData <- []byte(text)
-			fmt.Println("Sent to incomingData")
 		}()
 		return nil
 	})
@@ -165,7 +151,6 @@ func (c *Conn) setUpHandlers() {
 	c.Call("addEventListener", "message", messageHandler)
 
 	closeHandler := js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-		fmt.Println("onclose was triggered")
 		close(c.closeSignal)
 		return nil
 	})
@@ -176,7 +161,6 @@ func (c *Conn) setUpHandlers() {
 func (c *Conn) waitForOpen() error {
 	openSignal := make(chan struct{})
 	handler := js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-		fmt.Println("onopen was triggered")
 		close(openSignal)
 		return nil
 	})
