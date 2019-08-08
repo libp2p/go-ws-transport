@@ -1,3 +1,5 @@
+github.com/0xProject/qunit v0.0.0-20190730000255-81c18fdf7752 h1:KH0ZmBnFuzVwOXyHo5GBJ1EI+6N9okvry8aiY3oz/Fw=
+github.com/0xProject/qunit v0.0.0-20190730000255-81c18fdf7752/go.mod h1:Onz5mS+Tpffz0tyRWdHDrqKcQ1ZFNeRhYHrNAkaMgeQ=
 github.com/aead/siphash v1.0.1/go.mod h1:Nywa3cDsYNNK3gaciGTWPwHt0wlpNV15vwmswBAUSII=
 github.com/btcsuite/btcd v0.0.0-20190213025234-306aecffea32 h1:qkOC5Gd33k54tobS36cXdAzJbeHaduLtnLQQwNoIi78=
 github.com/btcsuite/btcd v0.0.0-20190213025234-306aecffea32/go.mod h1:DrZx5ec/dmnfpw9KyYoQyYo7d0KEvTkk/5M/vbZjAr8=
@@ -78,6 +80,8 @@ github.com/multiformats/go-multiaddr-net v0.0.1/go.mod h1:nw6HSxNmCIQH27XPGBuX+d
 github.com/multiformats/go-multibase v0.0.1/go.mod h1:bja2MqRZ3ggyXtZSEDKpl0uO/gviWFaSteVbWT51qgs=
 github.com/multiformats/go-multihash v0.0.1 h1:HHwN1K12I+XllBCrqKnhX949Orn4oawPkegHMu2vDqQ=
 github.com/multiformats/go-multihash v0.0.1/go.mod h1:w/5tugSrLEbWqlcgJabL3oHFKTwfvkofsjW2Qa1ct4U=
+github.com/norunners/vert v0.0.0-20190616030331-d9c8c2aacdf1 h1:ev7LCUzs++l9etq26bMAMhC4aajo2nO47xHeqlmmgD4=
+github.com/norunners/vert v0.0.0-20190616030331-d9c8c2aacdf1/go.mod h1:gS/a+U2DXScz4n1u8sTB+XpLfDJlr6JHMF7lZWH1pyk=
 github.com/onsi/ginkgo v1.6.0/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=
 github.com/onsi/ginkgo v1.7.0/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=
 github.com/onsi/ginkgo v1.8.0 h1:VkHVNpR4iVnU8XQR6DBm8BqYjN7CRzw+xKUbVVbbW9w=
