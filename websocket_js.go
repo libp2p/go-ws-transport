@@ -5,7 +5,6 @@ package websocket
 import (
 	"context"
 	"errors"
-	"fmt"
 	"syscall/js"
 
 	"github.com/libp2p/go-libp2p-core/transport"
@@ -18,11 +17,9 @@ func (t *WebsocketTransport) maDial(ctx context.Context, raddr ma.Multiaddr) (ma
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("wsurl:", wsurl)
 
 	rawConn := js.Global().Get("WebSocket").New(wsurl)
 	rawConn.Call("addEventListener", "error", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-		fmt.Println("onerror was triggered")
 		js.Global().Get("console").Call("log", args[0])
 		return nil
 	}))
@@ -34,7 +31,6 @@ func (t *WebsocketTransport) maDial(ctx context.Context, raddr ma.Multiaddr) (ma
 		return nil, err
 	}
 
-	fmt.Println("Returning from maDial")
 	return mnc, nil
 }
 
