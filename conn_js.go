@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"net"
+	"os"
 	"strings"
 	"sync"
 	"syscall/js"
@@ -134,18 +135,15 @@ func (c *Conn) RemoteAddr() net.Addr {
 }
 
 func (c *Conn) SetDeadline(t time.Time) error {
-	// Not supported
-	return nil
+	return os.ErrNoDeadline
 }
 
 func (c *Conn) SetReadDeadline(t time.Time) error {
-	// Not supported
-	return nil
+	return os.ErrNoDeadline
 }
 
 func (c *Conn) SetWriteDeadline(t time.Time) error {
-	// Not supported
-	return nil
+	return os.ErrNoDeadline
 }
 
 func (c *Conn) setUpHandlers() {
