@@ -7,7 +7,6 @@ import (
 	"errors"
 	"io"
 	"net"
-	"os"
 	"strings"
 	"sync"
 	"syscall/js"
@@ -137,15 +136,15 @@ func (c *Conn) RemoteAddr() net.Addr {
 }
 
 func (c *Conn) SetDeadline(t time.Time) error {
-	return os.ErrNoDeadline
+	return nil
 }
 
 func (c *Conn) SetReadDeadline(t time.Time) error {
-	return os.ErrNoDeadline
+	return nil
 }
 
 func (c *Conn) SetWriteDeadline(t time.Time) error {
-	return os.ErrNoDeadline
+	return nil
 }
 
 func (c *Conn) setUpHandlers() {
