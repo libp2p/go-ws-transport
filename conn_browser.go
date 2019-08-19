@@ -5,6 +5,7 @@ package websocket
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"io"
 	"net"
 	"strings"
@@ -167,7 +168,11 @@ func (c *Conn) setUpHandlers() {
 			// TODO(albrow): Currently we assume data is of type Blob. Really we
 			// should check binaryType and then decode accordingly.
 			blob := args[0].Get("data")
-			data := readBlob(blob)
+			data, err := readBlob(blob)
+			if err != nil {
+				// TODO(albrow): store and return error on next read.
+				panic(err)
+			}
 			c.incomingData <- data
 		}()
 		return nil
@@ -214,16 +219,43 @@ func (c *Conn) waitForOpen() error {
 
 // readBlob converts a JavaScript Blob into a slice of bytes. It uses the
 // FileReader API under the hood.
-func readBlob(blob js.Value) []byte {
+func readBlob(blob js.Value) ([]byte, error) {
 	reader := js.Global().Get("FileReader").New()
-	dataChan := make(chan []byte)
-	loadEndFunc := js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+
+	// Set up two handlers, one for loadend and one for error. Each handler will
+	// send results through a channel.
+	dataChan := make(chan []byte, 1)
+	loadEndHandler := js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 		data := []byte(reader.Get("result").String())
 		dataChan <- data
 		return nil
 	})
-	defer loadEndFunc.Release()
-	reader.Call("addEventListener", "loadend", loadEndFunc)
+	defer loadEndHandler.Release()
+	reader.Call("addEventListener", "loadend", loadEndHandler)
+	errChan := make(chan error, 1)
+	errorHandler := js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+		errChan <- convertJSError(args[0])
+		return nil
+	})
+	defer errorHandler.Release()
+	reader.Call("addEventListener", "error", errorHandler)
+
+	// Call readAsBinaryString and wait to receive from either channel.
 	reader.Call("readAsBinaryString", blob)
-	return <-dataChan
+	select {
+	case data := <-dataChan:
+		return data, nil
+	case err := <-errChan:
+		return nil, err
+	}
+}
+
+func convertJSError(val js.Value) error {
+	var typ string
+	if gotType := val.Get("type"); gotType != js.Undefined() {
+		typ = gotType.String()
+	} else {
+		typ = val.Type().String()
+	}
+	return fmt.Errorf("JavaScript error: %s %s", typ, val.Get("message").String())
 }
