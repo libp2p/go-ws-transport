@@ -226,7 +226,15 @@ func readBlob(blob js.Value) ([]byte, error) {
 	// send results through a channel.
 	dataChan := make(chan []byte, 1)
 	loadEndHandler := js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-		data := []byte(reader.Get("result").String())
+		// event.result is of type ArrayBuffer. We can convert it to a JavaScript
+		// Uint8Array, which is directly translatable to the Go type []byte.
+		buffer := reader.Get("result")
+		view := js.Global().Get("Uint8Array").New(buffer)
+		dataLen := view.Get("length").Int()
+		data := make([]byte, dataLen)
+		for i := 0; i < dataLen; i++ {
+			data[i] = byte(view.Index(i).Int())
+		}
 		dataChan <- data
 		return nil
 	})
@@ -240,8 +248,8 @@ func readBlob(blob js.Value) ([]byte, error) {
 	defer errorHandler.Release()
 	reader.Call("addEventListener", "error", errorHandler)
 
-	// Call readAsBinaryString and wait to receive from either channel.
-	reader.Call("readAsBinaryString", blob)
+	// Call readAsArrayBuffer and wait to receive from either channel.
+	reader.Call("readAsArrayBuffer", blob)
 	select {
 	case data := <-dataChan:
 		return data, nil
