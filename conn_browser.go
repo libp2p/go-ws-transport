@@ -35,6 +35,8 @@ type Conn struct {
 	currData       bytes.Buffer
 	closeSignal    chan struct{}
 	dataSignal     chan struct{}
+	localAddr      net.Addr
+	remoteAddr     net.Addr
 }
 
 // NewConn creates a Conn given a regular js/wasm WebSocket Conn.
@@ -44,6 +46,8 @@ func NewConn(raw js.Value) *Conn {
 		incomingData: make(chan []byte, incomingDataBufferSize),
 		closeSignal:  make(chan struct{}),
 		dataSignal:   make(chan struct{}),
+		localAddr:    NewAddr("0.0.0.0:0"),
+		remoteAddr:   getRemoteAddr(raw),
 	}
 	conn.setUpHandlers()
 	go func() {
@@ -125,14 +129,18 @@ func (c *Conn) Close() error {
 }
 
 func (c *Conn) LocalAddr() net.Addr {
-	return NewAddr("0.0.0.0:0")
+	return c.localAddr
 }
 
-func (c *Conn) RemoteAddr() net.Addr {
-	rawURL := c.Get("url").String()
+func getRemoteAddr(val js.Value) net.Addr {
+	rawURL := val.Get("url").String()
 	withoutPrefix := strings.TrimPrefix(rawURL, "ws://")
 	withoutSuffix := strings.TrimSuffix(withoutPrefix, "/")
 	return NewAddr(withoutSuffix)
+}
+
+func (c *Conn) RemoteAddr() net.Addr {
+	return c.remoteAddr
 }
 
 func (c *Conn) SetDeadline(t time.Time) error {
