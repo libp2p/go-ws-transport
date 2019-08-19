@@ -31,7 +31,7 @@ type Conn struct {
 	messageHandler *js.Func
 	closeHandler   *js.Func
 	mut            sync.Mutex
-	incomingData   chan []byte
+	incomingData   chan js.Value
 	currDataMut    sync.RWMutex
 	currData       bytes.Buffer
 	closeSignal    chan struct{}
@@ -44,7 +44,7 @@ type Conn struct {
 func NewConn(raw js.Value) *Conn {
 	conn := &Conn{
 		Value:        raw,
-		incomingData: make(chan []byte, incomingDataBufferSize),
+		incomingData: make(chan js.Value, incomingDataBufferSize),
 		closeSignal:  make(chan struct{}),
 		dataSignal:   make(chan struct{}),
 		localAddr:    NewAddr("0.0.0.0:0"),
@@ -164,17 +164,10 @@ func (c *Conn) setUpHandlers() {
 		return
 	}
 	messageHandler := js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-		go func() {
-			// TODO(albrow): Currently we assume data is of type Blob. Really we
-			// should check binaryType and then decode accordingly.
-			blob := args[0].Get("data")
-			data, err := readBlob(blob)
-			if err != nil {
-				// TODO(albrow): store and return error on next read.
-				panic(err)
-			}
-			c.incomingData <- data
-		}()
+		// TODO(albrow): Currently we assume data is of type Blob. Really we
+		// should check binaryType and then decode accordingly.
+		blob := args[0].Get("data")
+		c.incomingData <- blob
 		return nil
 	})
 	c.messageHandler = &messageHandler
@@ -191,10 +184,13 @@ func (c *Conn) setUpHandlers() {
 // readLoop continuosly reads from the c.incoming data channel and writes to the
 // current data buffer.
 func (c *Conn) readLoop() error {
-	for data := range c.incomingData {
-		c.currDataMut.Lock()
-		_, err := c.currData.Write(data)
+	for blob := range c.incomingData {
+		data, err := readBlob(blob)
 		if err != nil {
+			return err
+		}
+		c.currDataMut.Lock()
+		if _, err := c.currData.Write(data); err != nil {
 			c.currDataMut.Unlock()
 			return err
 		}
@@ -250,6 +246,7 @@ func readBlob(blob js.Value) ([]byte, error) {
 
 	// Call readAsArrayBuffer and wait to receive from either channel.
 	reader.Call("readAsArrayBuffer", blob)
+
 	select {
 	case data := <-dataChan:
 		return data, nil
