@@ -218,20 +218,12 @@ func readBlob(blob js.Value) []byte {
 	reader := js.Global().Get("FileReader").New()
 	dataChan := make(chan []byte)
 	loadEndFunc := js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-		// event.result is of type ArrayBuffer. We can convert it to a JavaScript
-		// Uint8Array, which is directly translatable to the Go type []byte.
-		buffer := reader.Get("result")
-		view := js.Global().Get("Uint8Array").New(buffer)
-		dataLen := view.Get("length").Int()
-		data := make([]byte, dataLen)
-		for i := 0; i < dataLen; i++ {
-			data[i] = byte(view.Index(i).Int())
-		}
+		data := []byte(reader.Get("result").String())
 		dataChan <- data
 		return nil
 	})
 	defer loadEndFunc.Release()
 	reader.Call("addEventListener", "loadend", loadEndFunc)
-	reader.Call("readAsArrayBuffer", blob)
+	reader.Call("readAsBinaryString", blob)
 	return <-dataChan
 }
