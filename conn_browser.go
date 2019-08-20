@@ -137,6 +137,8 @@ func (c *Conn) RemoteAddr() net.Addr {
 	return c.remoteAddr
 }
 
+// TODO: Return os.ErrNoDeadline. For now we return nil because multiplexers
+// don't handle the error correctly.
 func (c *Conn) SetDeadline(t time.Time) error {
 	return nil
 }
