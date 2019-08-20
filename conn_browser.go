@@ -42,7 +42,7 @@ func NewConn(raw js.Value) *Conn {
 	conn := &Conn{
 		Value:       raw,
 		closeSignal: make(chan struct{}),
-		dataSignal:  make(chan struct{}),
+		dataSignal:  make(chan struct{}, 1),
 		localAddr:   NewAddr("0.0.0.0:0"),
 		remoteAddr:  getRemoteAddr(raw),
 	}
