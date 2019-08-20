@@ -21,8 +21,6 @@ const (
 	webSocketStateClosed     = 3
 )
 
-const incomingDataBufferSize = 100
-
 var errConnectionClosed = errors.New("connection is closed")
 
 // Conn implements net.Conn interface for WebSockets in js/wasm.
@@ -31,7 +29,6 @@ type Conn struct {
 	messageHandler *js.Func
 	closeHandler   *js.Func
 	mut            sync.Mutex
-	incomingData   chan js.Value
 	currDataMut    sync.RWMutex
 	currData       bytes.Buffer
 	closeSignal    chan struct{}
@@ -43,21 +40,17 @@ type Conn struct {
 // NewConn creates a Conn given a regular js/wasm WebSocket Conn.
 func NewConn(raw js.Value) *Conn {
 	conn := &Conn{
-		Value:        raw,
-		incomingData: make(chan js.Value, incomingDataBufferSize),
-		closeSignal:  make(chan struct{}),
-		dataSignal:   make(chan struct{}),
-		localAddr:    NewAddr("0.0.0.0:0"),
-		remoteAddr:   getRemoteAddr(raw),
+		Value:       raw,
+		closeSignal: make(chan struct{}),
+		dataSignal:  make(chan struct{}),
+		localAddr:   NewAddr("0.0.0.0:0"),
+		remoteAddr:  getRemoteAddr(raw),
 	}
+	// Force the JavaScript WebSockets API to use the ArrayBuffer type for
+	// incoming messages instead of the Blob type. This is better for us because
+	// ArrayBuffer can be converted to []byte synchronously but Blob cannot.
+	conn.Set("binaryType", "arraybuffer")
 	conn.setUpHandlers()
-	go func() {
-		// TODO(albrow): Handle error appropriately
-		err := conn.readLoop()
-		if err != nil {
-			panic(err)
-		}
-	}()
 	return conn
 }
 
@@ -164,10 +157,21 @@ func (c *Conn) setUpHandlers() {
 		return
 	}
 	messageHandler := js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-		// TODO(albrow): Currently we assume data is of type Blob. Really we
-		// should check binaryType and then decode accordingly.
-		blob := args[0].Get("data")
-		c.incomingData <- blob
+		arrayBuffer := args[0].Get("data")
+		data := arrayBufferToBytes(arrayBuffer)
+		c.currDataMut.Lock()
+		if _, err := c.currData.Write(data); err != nil {
+			c.currDataMut.Unlock()
+			return err
+		}
+		c.currDataMut.Unlock()
+
+		// Non-blocking signal
+		select {
+		case c.dataSignal <- struct{}{}:
+		default:
+		}
+
 		return nil
 	})
 	c.messageHandler = &messageHandler
@@ -179,25 +183,6 @@ func (c *Conn) setUpHandlers() {
 	})
 	c.closeHandler = &closeHandler
 	c.Call("addEventListener", "close", closeHandler)
-}
-
-// readLoop continuosly reads from the c.incoming data channel and writes to the
-// current data buffer.
-func (c *Conn) readLoop() error {
-	for blob := range c.incomingData {
-		data, err := readBlob(blob)
-		if err != nil {
-			return err
-		}
-		c.currDataMut.Lock()
-		if _, err := c.currData.Write(data); err != nil {
-			c.currDataMut.Unlock()
-			return err
-		}
-		c.currDataMut.Unlock()
-		c.dataSignal <- struct{}{}
-	}
-	return nil
 }
 
 func (c *Conn) waitForOpen() error {
@@ -213,46 +198,15 @@ func (c *Conn) waitForOpen() error {
 	return nil
 }
 
-// readBlob converts a JavaScript Blob into a slice of bytes. It uses the
-// FileReader API under the hood.
-func readBlob(blob js.Value) ([]byte, error) {
-	reader := js.Global().Get("FileReader").New()
-
-	// Set up two handlers, one for loadend and one for error. Each handler will
-	// send results through a channel.
-	dataChan := make(chan []byte, 1)
-	loadEndHandler := js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-		// event.result is of type ArrayBuffer. We can convert it to a JavaScript
-		// Uint8Array, which is directly translatable to the Go type []byte.
-		buffer := reader.Get("result")
-		view := js.Global().Get("Uint8Array").New(buffer)
-		dataLen := view.Get("length").Int()
-		data := make([]byte, dataLen)
-		for i := 0; i < dataLen; i++ {
-			data[i] = byte(view.Index(i).Int())
-		}
-		dataChan <- data
-		return nil
-	})
-	defer loadEndHandler.Release()
-	reader.Call("addEventListener", "loadend", loadEndHandler)
-	errChan := make(chan error, 1)
-	errorHandler := js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-		errChan <- convertJSError(args[0])
-		return nil
-	})
-	defer errorHandler.Release()
-	reader.Call("addEventListener", "error", errorHandler)
-
-	// Call readAsArrayBuffer and wait to receive from either channel.
-	reader.Call("readAsArrayBuffer", blob)
-
-	select {
-	case data := <-dataChan:
-		return data, nil
-	case err := <-errChan:
-		return nil, err
+// arrayBufferToBytes converts a JavaScript ArrayBuffer to a slice of bytes.
+func arrayBufferToBytes(buffer js.Value) []byte {
+	view := js.Global().Get("Uint8Array").New(buffer)
+	dataLen := view.Get("length").Int()
+	data := make([]byte, dataLen)
+	for i := 0; i < dataLen; i++ {
+		data[i] = byte(view.Index(i).Int())
 	}
+	return data
 }
 
 func convertJSError(val js.Value) error {
