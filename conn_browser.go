@@ -28,13 +28,16 @@ type Conn struct {
 	js.Value
 	messageHandler *js.Func
 	closeHandler   *js.Func
+	errorHandler   *js.Func
 	mut            sync.Mutex
 	currDataMut    sync.RWMutex
 	currData       bytes.Buffer
+	closeOnce      sync.Once
 	closeSignal    chan struct{}
 	dataSignal     chan struct{}
 	localAddr      net.Addr
 	remoteAddr     net.Addr
+	firstErr       error
 }
 
 // NewConn creates a Conn given a regular js/wasm WebSocket Conn.
@@ -56,7 +59,7 @@ func NewConn(raw js.Value) *Conn {
 
 func (c *Conn) Read(b []byte) (int, error) {
 	if err := c.checkOpen(); err != nil {
-		return 0, io.EOF
+		return c.readAfterErr(b)
 	}
 
 	for {
@@ -73,12 +76,28 @@ func (c *Conn) Read(b []byte) (int, error) {
 			case <-c.dataSignal:
 				continue
 			case <-c.closeSignal:
-				return 0, io.EOF
+				return c.readAfterErr(b)
 			}
 		} else {
 			return n, err
 		}
 	}
+}
+
+// readAfterError reads from c.currData. If there is no more data left it
+// returns c.firstErr if non-nil and otherwise returns io.EOF.
+func (c *Conn) readAfterErr(b []byte) (int, error) {
+	c.currDataMut.RLock()
+	n, err := c.currData.Read(b)
+	c.currDataMut.RUnlock()
+	if n == 0 {
+		if c.firstErr != nil {
+			return 0, c.firstErr
+		} else {
+			return 0, io.EOF
+		}
+	}
+	return n, err
 }
 
 // checkOpen returns an error if the connection is not open. Otherwise, it
@@ -108,9 +127,21 @@ func (c *Conn) Write(b []byte) (n int, err error) {
 // close error, subsequent and concurrent calls will return nil.
 // This method is thread-safe.
 func (c *Conn) Close() error {
+	c.signalClose()
+	c.Call("close")
+	c.releaseHandlers()
+	return nil
+}
+
+func (c *Conn) signalClose() {
+	c.closeOnce.Do(func() {
+		close(c.closeSignal)
+	})
+}
+
+func (c *Conn) releaseHandlers() {
 	c.mut.Lock()
 	defer c.mut.Unlock()
-	c.Call("close")
 	if c.messageHandler != nil {
 		c.Call("removeEventListener", "message", *c.messageHandler)
 		c.messageHandler.Release()
@@ -119,7 +150,10 @@ func (c *Conn) Close() error {
 		c.Call("removeEventListener", "close", *c.closeHandler)
 		c.closeHandler.Release()
 	}
-	return nil
+	if c.errorHandler != nil {
+		c.Call("removeEventListener", "error", *c.errorHandler)
+		c.errorHandler.Release()
+	}
 }
 
 func (c *Conn) LocalAddr() net.Addr {
@@ -180,11 +214,27 @@ func (c *Conn) setUpHandlers() {
 	c.Call("addEventListener", "message", messageHandler)
 
 	closeHandler := js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-		close(c.closeSignal)
+		go func() {
+			c.signalClose()
+			c.mut.Lock()
+			// Store the error in c.firstErr. It will be returned by Read later on.
+			c.firstErr = errorEventToError(args[0])
+			c.mut.Unlock()
+			c.releaseHandlers()
+		}()
 		return nil
 	})
 	c.closeHandler = &closeHandler
 	c.Call("addEventListener", "close", closeHandler)
+
+	errorHandler := js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+		// Unfortunately, the "error" event doesn't appear to give us any useful
+		// information. All we can do is close the connection.
+		c.Close()
+		return nil
+	})
+	c.errorHandler = &errorHandler
+	c.Call("addEventListener", "error", errorHandler)
 }
 
 func (c *Conn) waitForOpen() error {
@@ -196,8 +246,14 @@ func (c *Conn) waitForOpen() error {
 	defer c.Call("removeEventListener", "open", handler)
 	defer handler.Release()
 	c.Call("addEventListener", "open", handler)
-	<-openSignal
-	return nil
+	select {
+	case <-openSignal:
+		return nil
+	case <-c.closeSignal:
+		// c.closeSignal means there was an error when trying to open the
+		// connection.
+		return c.firstErr
+	}
 }
 
 // arrayBufferToBytes converts a JavaScript ArrayBuffer to a slice of bytes.
@@ -211,12 +267,26 @@ func arrayBufferToBytes(buffer js.Value) []byte {
 	return data
 }
 
-func convertJSError(val js.Value) error {
+func errorEventToError(val js.Value) error {
 	var typ string
 	if gotType := val.Get("type"); gotType != js.Undefined() {
 		typ = gotType.String()
 	} else {
 		typ = val.Type().String()
 	}
-	return fmt.Errorf("JavaScript error: %s %s", typ, val.Get("message").String())
+	var reason string
+	if gotReason := val.Get("reason"); gotReason != js.Undefined() && gotReason.String() != "" {
+		reason = gotReason.String()
+	} else {
+		code := val.Get("code")
+		if code != js.Undefined() {
+			switch code := code.Int(); code {
+			case 1006:
+				reason = "code 1006: connection unexpectedly closed"
+			default:
+				reason = fmt.Sprintf("unexpected code: %d", code)
+			}
+		}
+	}
+	return fmt.Errorf("JavaScript error: (%s) %s", typ, reason)
 }
