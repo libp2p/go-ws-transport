@@ -115,8 +115,8 @@ func (c *Conn) Write(b []byte) (n int, err error) {
 		return 0, err
 	}
 	uint8Array := js.Global().Get("Uint8Array").New(len(b))
-	for i := 0; i < len(b); i++ {
-		uint8Array.SetIndex(i, b[i])
+	for i, bi := range b {
+		uint8Array.SetIndex(i, bi)
 	}
 	c.Call("send", uint8Array.Get("buffer"))
 	return len(b), nil
