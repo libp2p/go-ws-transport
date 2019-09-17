@@ -64,22 +64,21 @@ func (c *Conn) Read(b []byte) (int, error) {
 
 	for {
 		c.currDataMut.RLock()
-		n, err := c.currData.Read(b)
+		n, _ := c.currData.Read(b)
 		c.currDataMut.RUnlock()
-		if err != nil && err != io.EOF {
-			// Return any unexpected errors immediately.
-			return n, err
-		} else if n == 0 || err == io.EOF {
-			// There is no data ready to be read. Wait for more data or for the
-			// connection to be closed.
-			select {
-			case <-c.dataSignal:
-				continue
-			case <-c.closeSignal:
-				return c.readAfterErr(b)
-			}
-		} else {
-			return n, err
+
+		if n != 0 {
+			// Data was ready. Return the number of bytes read.
+			return n, nil
+		}
+
+		// There is no data ready to be read. Wait for more data or for the
+		// connection to be closed.
+		select {
+		case <-c.dataSignal:
+			continue
+		case <-c.closeSignal:
+			return c.readAfterErr(b)
 		}
 	}
 }
