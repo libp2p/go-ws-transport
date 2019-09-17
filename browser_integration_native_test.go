@@ -17,10 +17,6 @@ import (
 	ma "github.com/multiformats/go-multiaddr"
 )
 
-const (
-	testServerPort = ":9714"
-)
-
 // TestInBrowser is a harness that allows us to use `go test` in order to run
 // WebAssembly tests in a headless browser.
 func TestInBrowser(t *testing.T) {
