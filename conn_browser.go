@@ -26,18 +26,19 @@ var errConnectionClosed = errors.New("connection is closed")
 // Conn implements net.Conn interface for WebSockets in js/wasm.
 type Conn struct {
 	js.Value
-	messageHandler *js.Func
-	closeHandler   *js.Func
-	errorHandler   *js.Func
-	mut            sync.Mutex
-	currDataMut    sync.RWMutex
-	currData       bytes.Buffer
-	closeOnce      sync.Once
-	closeSignal    chan struct{}
-	dataSignal     chan struct{}
-	localAddr      net.Addr
-	remoteAddr     net.Addr
-	firstErr       error
+	messageHandler  *js.Func
+	closeHandler    *js.Func
+	errorHandler    *js.Func
+	mut             sync.Mutex
+	currDataMut     sync.RWMutex
+	currData        bytes.Buffer
+	closeOnce       sync.Once
+	closeSignalOnce sync.Once
+	closeSignal     chan struct{}
+	dataSignal      chan struct{}
+	localAddr       net.Addr
+	remoteAddr      net.Addr
+	firstErr        error
 }
 
 // NewConn creates a Conn given a regular js/wasm WebSocket Conn.
@@ -126,14 +127,16 @@ func (c *Conn) Write(b []byte) (n int, err error) {
 // close error, subsequent and concurrent calls will return nil.
 // This method is thread-safe.
 func (c *Conn) Close() error {
-	c.signalClose()
-	c.Call("close")
-	c.releaseHandlers()
+	c.closeOnce.Do(func() {
+		c.signalClose()
+		c.Call("close")
+		c.releaseHandlers()
+	})
 	return nil
 }
 
 func (c *Conn) signalClose() {
-	c.closeOnce.Do(func() {
+	c.closeSignalOnce.Do(func() {
 		close(c.closeSignal)
 	})
 }
