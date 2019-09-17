@@ -112,6 +112,11 @@ func (c *Conn) checkOpen() error {
 }
 
 func (c *Conn) Write(b []byte) (n int, err error) {
+	defer func() {
+		if e := recover(); e != nil {
+			err = recoveredValueToError(e)
+		}
+	}()
 	if err := c.checkOpen(); err != nil {
 		return 0, err
 	}
@@ -294,4 +299,13 @@ func errorEventToError(val js.Value) error {
 		}
 	}
 	return fmt.Errorf("JavaScript error: (%s) %s", typ, reason)
+}
+
+func recoveredValueToError(e interface{}) error {
+	switch e := e.(type) {
+	case error:
+		return e
+	default:
+		return fmt.Errorf("recovered from unexpected panic: %T %s", e, e)
+	}
 }
