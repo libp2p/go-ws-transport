@@ -133,8 +133,8 @@ func (c *Conn) Write(b []byte) (n int, err error) {
 // This method is thread-safe.
 func (c *Conn) Close() error {
 	c.closeOnce.Do(func() {
-		c.signalClose()
 		c.Call("close")
+		c.signalClose()
 		c.releaseHandlers()
 	})
 	return nil
