@@ -144,14 +144,17 @@ func (c *Conn) releaseHandlers() {
 	if c.messageHandler != nil {
 		c.Call("removeEventListener", "message", *c.messageHandler)
 		c.messageHandler.Release()
+		c.messageHandler = nil
 	}
 	if c.closeHandler != nil {
 		c.Call("removeEventListener", "close", *c.closeHandler)
 		c.closeHandler.Release()
+		c.closeHandler = nil
 	}
 	if c.errorHandler != nil {
 		c.Call("removeEventListener", "error", *c.errorHandler)
 		c.errorHandler.Release()
+		c.errorHandler = nil
 	}
 }
 
