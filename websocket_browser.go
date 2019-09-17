@@ -21,6 +21,7 @@ func (t *WebsocketTransport) maDial(ctx context.Context, raddr ma.Multiaddr) (ma
 	rawConn := js.Global().Get("WebSocket").New(wsurl)
 	conn := NewConn(rawConn)
 	if err := conn.waitForOpen(); err != nil {
+		conn.Close()
 		return nil, err
 	}
 	mnc, err := manet.WrapNetConn(conn)
