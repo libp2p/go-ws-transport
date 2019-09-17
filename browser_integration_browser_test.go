@@ -51,6 +51,9 @@ func TestInBrowser(t *testing.T) {
 	}
 
 	// TODO(albrow): This hack is necessary in order to give the reader time to
-	// finish. We should find some way to remove it.
+	// finish. As soon as this test function returns, the browser window is
+	// closed, which means there is no time for the other end of the connection to
+	// read the "pong" message. We should find some way to remove this hack if
+	// possible.
 	time.Sleep(1 * time.Second)
 }
