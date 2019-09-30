@@ -4,7 +4,6 @@ package websocket
 
 import (
 	"bufio"
-	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -17,9 +16,35 @@ import (
 	ma "github.com/multiformats/go-multiaddr"
 )
 
+var (
+	wasmBrowserTestBin     = "wasmbrowsertest"
+	wasmBrowserTestDir     = filepath.Join("tools", "bin")
+	wasmBrowserTestPackage = "github.com/agnivade/wasmbrowsertest"
+)
+
 // TestInBrowser is a harness that allows us to use `go test` in order to run
 // WebAssembly tests in a headless browser.
 func TestInBrowser(t *testing.T) {
+	// ensure we have the right tools.
+	err := os.MkdirAll(wasmBrowserTestDir, 0755)
+
+	t.Logf("building %s", wasmBrowserTestPackage)
+	if err != nil && !os.IsExist(err) {
+		t.Fatal(err)
+	}
+
+	cmd := exec.Command(
+		"go", "build",
+		"-o", wasmBrowserTestBin,
+		"github.com/agnivade/wasmbrowsertest",
+	)
+	cmd.Dir = wasmBrowserTestDir
+	err = cmd.Run()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log("starting server")
+
 	// Start a transport which the browser peer will dial.
 	serverDoneSignal := make(chan struct{})
 	go func() {
@@ -62,13 +87,19 @@ func TestInBrowser(t *testing.T) {
 		}
 	}()
 
-	testExecPath := filepath.Join(os.Getenv("GOPATH"), "bin", "wasmbrowsertest")
-	cmd := exec.Command("go", "test", "-exec", testExecPath, "-run", "TestInBrowser", ".", "-v")
+	t.Log("starting browser")
+
+	cmd = exec.Command(
+		"go", "test", "-v",
+		"-exec", filepath.Join(wasmBrowserTestDir, wasmBrowserTestBin),
+		"-run", "TestInBrowser",
+		".",
+	)
 	cmd.Env = append(os.Environ(), []string{"GOOS=js", "GOARCH=wasm"}...)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		formattedOutput := "\t" + strings.Join(strings.Split(string(output), "\n"), "\n\t")
-		fmt.Println("BROWSER OUTPUT:\n", formattedOutput)
+		t.Log("BROWSER OUTPUT:\n", formattedOutput)
 		t.Fatal("BROWSER:", err)
 	}
 
