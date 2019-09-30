@@ -6,7 +6,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"io"
 	"net"
 	"strings"
 	"sync"
@@ -59,8 +58,10 @@ func NewConn(raw js.Value) *Conn {
 }
 
 func (c *Conn) Read(b []byte) (int, error) {
-	if err := c.checkOpen(); err != nil {
-		return c.readAfterErr(b)
+	select {
+	case <-c.closeSignal:
+		c.readAfterErr(b)
+	default:
 	}
 
 	for {
@@ -77,7 +78,6 @@ func (c *Conn) Read(b []byte) (int, error) {
 		// connection to be closed.
 		select {
 		case <-c.dataSignal:
-			continue
 		case <-c.closeSignal:
 			return c.readAfterErr(b)
 		}
@@ -87,16 +87,12 @@ func (c *Conn) Read(b []byte) (int, error) {
 // readAfterError reads from c.currData. If there is no more data left it
 // returns c.firstErr if non-nil and otherwise returns io.EOF.
 func (c *Conn) readAfterErr(b []byte) (int, error) {
+	if c.firstErr != nil {
+		return 0, c.firstErr
+	}
 	c.currDataMut.RLock()
 	n, err := c.currData.Read(b)
 	c.currDataMut.RUnlock()
-	if n == 0 {
-		if c.firstErr != nil {
-			return 0, c.firstErr
-		} else {
-			return 0, io.EOF
-		}
-	}
 	return n, err
 }
 
