@@ -84,7 +84,11 @@ func (c *Conn) Write(b []byte) (n int, err error) {
 func (c *Conn) Close() error {
 	var err error
 	c.closeOnce.Do(func() {
-		err1 := c.Conn.WriteControl(ws.CloseMessage, nil, time.Now().Add(GracefulCloseTimeout))
+		err1 := c.Conn.WriteControl(
+			ws.CloseMessage,
+			ws.FormatCloseMessage(ws.CloseNormalClosure, "closed"),
+			time.Now().Add(GracefulCloseTimeout),
+		)
 		err2 := c.Conn.Close()
 		switch {
 		case err1 != nil:
