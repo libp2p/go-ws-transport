@@ -38,7 +38,7 @@ type Conn struct {
 	dataSignal      chan struct{}
 	localAddr       net.Addr
 	remoteAddr      net.Addr
-	firstErr        error
+	firstErr        error // only read this _after_ observing that closeSignal has been closed.
 }
 
 // NewConn creates a Conn given a regular js/wasm WebSocket Conn.
@@ -134,14 +134,15 @@ func (c *Conn) Write(b []byte) (n int, err error) {
 func (c *Conn) Close() error {
 	c.closeOnce.Do(func() {
 		c.Call("close")
-		c.signalClose()
+		c.signalClose(nil)
 		c.releaseHandlers()
 	})
 	return nil
 }
 
-func (c *Conn) signalClose() {
+func (c *Conn) signalClose(err error) {
 	c.closeSignalOnce.Do(func() {
+		c.firstErr = err
 		close(c.closeSignal)
 	})
 }
@@ -225,11 +226,7 @@ func (c *Conn) setUpHandlers() {
 
 	closeHandler := js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 		go func() {
-			c.signalClose()
-			c.mut.Lock()
-			// Store the error in c.firstErr. It will be returned by Read later on.
-			c.firstErr = errorEventToError(args[0])
-			c.mut.Unlock()
+			c.signalClose(errorEventToError(args[0]))
 			c.releaseHandlers()
 		}()
 		return nil
