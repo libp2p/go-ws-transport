@@ -1,3 +1,5 @@
+// +build !js
+
 package websocket
 
 import (
@@ -9,7 +11,6 @@ import (
 	"testing/iotest"
 
 	"github.com/libp2p/go-libp2p-core/sec/insecure"
-
 	mplex "github.com/libp2p/go-libp2p-mplex"
 	ttransport "github.com/libp2p/go-libp2p-testing/suites/transport"
 	tptu "github.com/libp2p/go-libp2p-transport-upgrader"

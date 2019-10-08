@@ -9,6 +9,7 @@ require (
 	github.com/multiformats/go-multiaddr v0.1.1
 	github.com/multiformats/go-multiaddr-fmt v0.1.0
 	github.com/multiformats/go-multiaddr-net v0.1.0
+	github.com/whyrusleeping/go-logging v0.0.1 // indirect
 )
 
 go 1.12
