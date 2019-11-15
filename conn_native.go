@@ -5,7 +5,9 @@ package websocket
 import (
 	"io"
 	"net"
+	"runtime/debug"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	ws "github.com/gorilla/websocket"
@@ -13,6 +15,8 @@ import (
 
 // Conn implements net.Conn interface for gorilla/websocket.
 type Conn struct {
+	wcount int32
+	mx     sync.Mutex
 	*ws.Conn
 	DefaultMessageType int
 	reader             io.Reader
@@ -67,6 +71,18 @@ func (c *Conn) prepNextReader() error {
 }
 
 func (c *Conn) Write(b []byte) (n int, err error) {
+	if atomic.AddInt32(&c.wcount, 1) > 1 {
+		debug.PrintStack()
+	}
+
+	c.mx.Lock()
+	defer c.mx.Unlock()
+	defer func() {
+		if atomic.AddInt32(&c.wcount, -1) > 0 {
+			debug.PrintStack()
+		}
+	}()
+
 	if err := c.Conn.WriteMessage(c.DefaultMessageType, b); err != nil {
 		return 0, err
 	}
@@ -78,6 +94,18 @@ func (c *Conn) Write(b []byte) (n int, err error) {
 // close error, subsequent and concurrent calls will return nil.
 // This method is thread-safe.
 func (c *Conn) Close() error {
+	if atomic.AddInt32(&c.wcount, 1) > 1 {
+		debug.PrintStack()
+	}
+
+	c.mx.Lock()
+	defer c.mx.Unlock()
+	defer func() {
+		if atomic.AddInt32(&c.wcount, -1) > 0 {
+			debug.PrintStack()
+		}
+	}()
+
 	var err error
 	c.closeOnce.Do(func() {
 		err1 := c.Conn.WriteControl(
