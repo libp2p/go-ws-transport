@@ -12,4 +12,4 @@ require (
 	github.com/whyrusleeping/go-logging v0.0.1 // indirect
 )
 
-go 1.12
+go 1.13
