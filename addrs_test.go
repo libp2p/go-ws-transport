@@ -17,7 +17,7 @@ func TestMultiaddrParsing(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if wsaddr != "ws://127.0.0.1:5555" {
+	if wsaddr.String() != "ws://127.0.0.1:5555" {
 		t.Fatalf("expected ws://127.0.0.1:5555, got %s", wsaddr)
 	}
 }
@@ -37,7 +37,7 @@ func TestParseWebsocketNetAddr(t *testing.T) {
 		t.Fatalf("expect \"not a websocket address\", got \"%s\"", err)
 	}
 
-	wsAddr := NewAddr("127.0.0.1:5555")
+	wsAddr := NewAddrWithScheme("127.0.0.1:5555", false)
 	parsed, err := ParseWebsocketNetAddr(wsAddr)
 	if err != nil {
 		t.Fatal(err)
@@ -58,8 +58,8 @@ func TestConvertWebsocketMultiaddrToNetAddr(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if wsaddr.String() != "//127.0.0.1:5555" {
-		t.Fatalf("expected //127.0.0.1:5555, got %s", wsaddr)
+	if wsaddr.String() != "ws://127.0.0.1:5555" {
+		t.Fatalf("expected ws://127.0.0.1:5555, got %s", wsaddr)
 	}
 	if wsaddr.Network() != "websocket" {
 		t.Fatalf("expected network: \"websocket\", got \"%s\"", wsaddr.Network())

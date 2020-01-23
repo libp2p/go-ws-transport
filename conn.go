@@ -16,6 +16,7 @@ var GracefulCloseTimeout = 100 * time.Millisecond
 // Conn implements net.Conn interface for gorilla/websocket.
 type Conn struct {
 	*ws.Conn
+	secure             bool
 	DefaultMessageType int
 	reader             io.Reader
 	closeOnce          sync.Once
@@ -24,6 +25,15 @@ type Conn struct {
 }
 
 var _ net.Conn = (*Conn)(nil)
+
+// NewConn creates a Conn given a regular gorilla/websocket Conn.
+func NewConn(raw *ws.Conn, secure bool) *Conn {
+	return &Conn{
+		Conn:               raw,
+		secure:             secure,
+		DefaultMessageType: ws.BinaryMessage,
+	}
+}
 
 func (c *Conn) Read(b []byte) (int, error) {
 	c.readLock.Lock()
@@ -109,11 +119,11 @@ func (c *Conn) Close() error {
 }
 
 func (c *Conn) LocalAddr() net.Addr {
-	return NewAddr(c.Conn.LocalAddr().String())
+	return NewAddrWithScheme(c.Conn.LocalAddr().String(), c.secure)
 }
 
 func (c *Conn) RemoteAddr() net.Addr {
-	return NewAddr(c.Conn.RemoteAddr().String())
+	return NewAddrWithScheme(c.Conn.RemoteAddr().String(), c.secure)
 }
 
 func (c *Conn) SetDeadline(t time.Time) error {
@@ -138,12 +148,4 @@ func (c *Conn) SetWriteDeadline(t time.Time) error {
 	defer c.writeLock.Unlock()
 
 	return c.Conn.SetWriteDeadline(t)
-}
-
-// NewConn creates a Conn given a regular gorilla/websocket Conn.
-func NewConn(raw *ws.Conn) *Conn {
-	return &Conn{
-		Conn:               raw,
-		DefaultMessageType: ws.BinaryMessage,
-	}
 }

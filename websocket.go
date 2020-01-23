@@ -3,6 +3,7 @@ package websocket
 
 import (
 	"context"
+	"crypto/tls"
 	"net"
 	"net/http"
 	"net/url"
@@ -22,11 +23,12 @@ var WsFmt = mafmt.And(mafmt.TCP, mafmt.Base(ma.P_WS))
 
 // This is _not_ WsFmt because we want the transport to stick to dialing fully
 // resolved addresses.
-var dialMatcher = mafmt.And(mafmt.IP, mafmt.Base(ma.P_TCP), mafmt.Base(ma.P_WS))
+var dialMatcher = mafmt.And(mafmt.IP, mafmt.Base(ma.P_TCP), mafmt.Or(mafmt.Base(ma.P_WS), mafmt.Base(ma.P_WSS)))
 
 func init() {
 	manet.RegisterFromNetAddr(ParseWebsocketNetAddr, "websocket")
 	manet.RegisterToNetAddr(ConvertWebsocketMultiaddrToNetAddr, "ws")
+	manet.RegisterToNetAddr(ConvertWebsocketMultiaddrToNetAddr, "wss")
 }
 
 // Default gorilla upgrader
@@ -37,22 +39,44 @@ var upgrader = ws.Upgrader{
 	},
 }
 
+type Option func(*WebsocketTransport) error
+
+// WithTLSClientConfig sets a TLS client configuration on the WebSocket Dialer. Only
+// relevant for non-browser usages.
+//
+// Some useful use cases include setting InsecureSkipVerify to `true`, or
+// setting user-defined trusted CA certificates.
+func WithTLSClientConfig(c *tls.Config) Option {
+	return func(t *WebsocketTransport) error {
+		t.tlsClientConf = c
+		return nil
+	}
+}
+
 // WebsocketTransport is the actual go-libp2p transport
 type WebsocketTransport struct {
 	upgrader transport.Upgrader
 	rcmgr    network.ResourceManager
+
+	tlsClientConf *tls.Config
 }
 
 var _ transport.Transport = (*WebsocketTransport)(nil)
 
-func New(u transport.Upgrader, rcmgr network.ResourceManager) *WebsocketTransport {
+func New(u transport.Upgrader, rcmgr network.ResourceManager, opts ...Option) (*WebsocketTransport, error) {
 	if rcmgr == nil {
 		rcmgr = network.NullResourceManager
 	}
-	return &WebsocketTransport{
+	t := &WebsocketTransport{
 		upgrader: u,
 		rcmgr:    rcmgr,
 	}
+	for _, opt := range opts {
+		if err := opt(t); err != nil {
+			return nil, err
+		}
+	}
+	return t, nil
 }
 
 func (t *WebsocketTransport) CanDial(a ma.Multiaddr) bool {
@@ -60,7 +84,7 @@ func (t *WebsocketTransport) CanDial(a ma.Multiaddr) bool {
 }
 
 func (t *WebsocketTransport) Protocols() []int {
-	return []int{ma.ProtocolWithCode(ma.P_WS).Code}
+	return []int{ma.P_WS, ma.P_WSS}
 }
 
 func (t *WebsocketTransport) Proxy() bool {
@@ -86,12 +110,12 @@ func (t *WebsocketTransport) maDial(ctx context.Context, raddr ma.Multiaddr) (ma
 		return nil, err
 	}
 
-	wscon, _, err := ws.DefaultDialer.Dial(wsurl, nil)
+	wscon, _, err := ws.DefaultDialer.Dial(wsurl.String(), nil)
 	if err != nil {
 		return nil, err
 	}
 
-	mnc, err := manet.WrapNetConn(NewConn(wscon))
+	mnc, err := manet.WrapNetConn(NewConn(wscon, wsurl.Scheme == "wss"))
 	if err != nil {
 		wscon.Close()
 		return nil, err
