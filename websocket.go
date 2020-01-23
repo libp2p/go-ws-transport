@@ -69,7 +69,7 @@ func (t *WebsocketTransport) CanDial(a ma.Multiaddr) bool {
 }
 
 func (t *WebsocketTransport) Protocols() []int {
-	return []int{WsProtocol.Code}
+	return []int{WsProtocol.Code, WssProtocol.Code}
 }
 
 func (t *WebsocketTransport) Proxy() bool {

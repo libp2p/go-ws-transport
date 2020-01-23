@@ -4,6 +4,7 @@ package websocket
 
 import (
 	"context"
+	"crypto/tls"
 	"net"
 	"net/http"
 	"net/url"
@@ -28,6 +29,9 @@ func (t *WebsocketTransport) maDial(ctx context.Context, raddr ma.Multiaddr) (ma
 		return nil, err
 	}
 
+	ws.DefaultDialer.TLSClientConfig = &tls.Config{
+		InsecureSkipVerify: true,
+	}
 	wscon, _, err := ws.DefaultDialer.Dial(wsurl, nil)
 	if err != nil {
 		return nil, err

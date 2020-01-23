@@ -10,6 +10,7 @@ import (
 	"testing"
 	"testing/iotest"
 
+	"github.com/libp2p/go-libp2p-core/peer"
 	"github.com/libp2p/go-libp2p-core/sec/insecure"
 	mplex "github.com/libp2p/go-libp2p-mplex"
 	ttransport "github.com/libp2p/go-libp2p-testing/suites/transport"
@@ -41,6 +42,26 @@ func TestCanDial(t *testing.T) {
 	}
 	if d.CanDial(addrTCP) {
 		t.Fatal("expected to not match tcp maddr, but did")
+	}
+}
+
+func TestDialWss(t *testing.T) {
+	raddr, err := ma.NewMultiaddr("/dns4/nyc-1.bootstrap.libp2p.io/tcp/443/wss")
+	if err != nil {
+		t.Fatal(err)
+	}
+	rid, err := peer.IDB58Decode("QmSoLueR4xBeUbY9WZ9xGUUxunbKWcrNFTDAadQJmocnWm")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	tpt := New(&tptu.Upgrader{
+		Secure: insecure.New("QmSoLueR4xBeUbY9WZ9xGUUxunbKWcrNFTDAadQJmocnWm"),
+		Muxer:  new(mplex.Transport),
+	})
+	_, err = tpt.Dial(context.Background(), raddr, rid)
+	if err != nil {
+		t.Fatal(err)
 	}
 }
 
