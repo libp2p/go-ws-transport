@@ -22,6 +22,10 @@ func TestCanDial(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	addrWss, err := ma.NewMultiaddr("/dnsaddr/example.com/tcp/5555/wss")
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	addrTCP, err := ma.NewMultiaddr("/ip4/127.0.0.1/tcp/5555")
 	if err != nil {
@@ -29,14 +33,13 @@ func TestCanDial(t *testing.T) {
 	}
 
 	d := &WebsocketTransport{}
-	matchTrue := d.CanDial(addrWs)
-	matchFalse := d.CanDial(addrTCP)
-
-	if !matchTrue {
+	if !d.CanDial(addrWs) {
 		t.Fatal("expected to match websocket maddr, but did not")
 	}
-
-	if matchFalse {
+	if !d.CanDial(addrWss) {
+		t.Fatal("expected to match secure websocket maddr, but did not")
+	}
+	if d.CanDial(addrTCP) {
 		t.Fatal("expected to not match tcp maddr, but did")
 	}
 }

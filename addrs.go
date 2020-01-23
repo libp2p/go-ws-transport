@@ -71,3 +71,19 @@ func parseMultiaddr(a ma.Multiaddr) (string, error) {
 
 	return "ws://" + host, nil
 }
+
+// func parseMultiaddr(a ma.Multiaddr) (string, error) {
+// 	p := a.Protocols()
+// 	host, err := a.ValueForProtocol(p[0].Code)
+// 	if err != nil {
+// 		return "", err
+// 	}
+// 	if p[0].Code == ma.P_IP6 {
+// 		host = "[" + host + "]"
+// 	}
+// 	port, err := a.ValueForProtocol(ma.P_TCP)
+// 	if err != nil {
+// 		return "", err
+// 	}
+// 	return p[2].Name + "://" + host + ":" + port, nil
+// }

@@ -3,6 +3,7 @@ package websocket
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/libp2p/go-libp2p-core/peer"
 	"github.com/libp2p/go-libp2p-core/transport"
@@ -16,9 +17,17 @@ import (
 //
 // Deprecated: use `ma.ProtocolWithCode(ma.P_WS)
 var WsProtocol = ma.ProtocolWithCode(ma.P_WS)
+var WssProtocol = ma.Protocol{
+	Code:  478,
+	Name:  "wss",
+	VCode: ma.CodeToVarint(478),
+}
 
 // WsFmt is multiaddr formatter for WsProtocol
-var WsFmt = mafmt.And(mafmt.TCP, mafmt.Base(WsProtocol.Code))
+var WsFmt = mafmt.And(mafmt.TCP, mafmt.Or(
+	mafmt.Base(WsProtocol.Code),
+	mafmt.Base(WssProtocol.Code),
+))
 
 // WsCodec is the multiaddr-net codec definition for the websocket transport
 var WsCodec = &manet.NetCodec{
@@ -27,9 +36,21 @@ var WsCodec = &manet.NetCodec{
 	ConvertMultiaddr: ConvertWebsocketMultiaddrToNetAddr,
 	ParseNetAddr:     ParseWebsocketNetAddr,
 }
+var WssCodec = &manet.NetCodec{
+	NetAddrNetworks:  []string{"websocket secure"},
+	ProtocolName:     "wss",
+	ConvertMultiaddr: ConvertWebsocketMultiaddrToNetAddr,
+	ParseNetAddr:     ParseWebsocketNetAddr,
+}
 
 func init() {
+	err := ma.AddProtocol(WssProtocol)
+	if err != nil {
+		panic(fmt.Errorf("error registering websocket secure protocol: %s", err))
+	}
+
 	manet.RegisterNetCodec(WsCodec)
+	manet.RegisterNetCodec(WssCodec)
 }
 
 var _ transport.Transport = (*WebsocketTransport)(nil)
