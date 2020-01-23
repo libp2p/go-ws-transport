@@ -22,7 +22,7 @@ func TestCanDial(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	addrWss, err := ma.NewMultiaddr("/dnsaddr/example.com/tcp/5555/wss")
+	addrWss, err := ma.NewMultiaddr("/dns4/example.com/tcp/5555/wss")
 	if err != nil {
 		t.Fatal(err)
 	}
