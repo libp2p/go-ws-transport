@@ -23,16 +23,24 @@ var upgrader = ws.Upgrader{
 	},
 }
 
+var wsDialer *ws.Dialer
+
+func init() {
+	// Initialize our own wsDialer which skips TLS verification.
+	wsDialer = new(ws.Dialer)
+	(*wsDialer) = *ws.DefaultDialer
+	wsDialer.TLSClientConfig = &tls.Config{
+		InsecureSkipVerify: true,
+	}
+}
+
 func (t *WebsocketTransport) maDial(ctx context.Context, raddr ma.Multiaddr) (manet.Conn, error) {
 	wsurl, err := parseMultiaddr(raddr)
 	if err != nil {
 		return nil, err
 	}
 
-	ws.DefaultDialer.TLSClientConfig = &tls.Config{
-		InsecureSkipVerify: true,
-	}
-	wscon, _, err := ws.DefaultDialer.Dial(wsurl, nil)
+	wscon, _, err := wsDialer.Dial(wsurl, nil)
 	if err != nil {
 		return nil, err
 	}
