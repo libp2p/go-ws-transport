@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/libp2p/go-libp2p-core/peer"
 	"github.com/libp2p/go-libp2p-core/sec/insecure"
 	mplex "github.com/libp2p/go-libp2p-mplex"
 	tptu "github.com/libp2p/go-libp2p-transport-upgrader"
@@ -21,24 +22,37 @@ func TestInBrowser(t *testing.T) {
 	})
 	addr, err := ma.NewMultiaddr("/ip4/127.0.0.1/tcp/5555/ws")
 	if err != nil {
-		t.Fatal("could not parse multiaddress:" + err.Error())
+		t.Fatal("could not parse multiaddress: " + err.Error())
 	}
 	conn, err := tpt.Dial(context.Background(), addr, "serverPeer")
 	if err != nil {
-		t.Fatal("could not dial server:" + err.Error())
+		t.Fatal("could not dial server: " + err.Error())
 	}
 	defer conn.Close()
 
+	knownWssAddr, err := ma.NewMultiaddr("/dns4/nyc-1.bootstrap.libp2p.io/tcp/443/wss")
+	if err != nil {
+		t.Fatal(err)
+	}
+	knownWssPeerID, err := peer.IDB58Decode("QmSoLueR4xBeUbY9WZ9xGUUxunbKWcrNFTDAadQJmocnWm")
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = tpt.Dial(context.Background(), knownWssAddr, knownWssPeerID)
+	if err != nil {
+		t.Fatal("could not dial known WSS addr: " + err.Error())
+	}
+
 	stream, err := conn.AcceptStream()
 	if err != nil {
-		t.Fatal("could not accept stream:" + err.Error())
+		t.Fatal("could not accept stream: " + err.Error())
 	}
 	defer stream.Close()
 
 	buf := bufio.NewReader(stream)
 	msg, err := buf.ReadString('\n')
 	if err != nil {
-		t.Fatal("could not read ping message:" + err.Error())
+		t.Fatal("could not read ping message: " + err.Error())
 	}
 	expected := "ping\n"
 	if msg != expected {
@@ -47,7 +61,7 @@ func TestInBrowser(t *testing.T) {
 
 	_, err = stream.Write([]byte("pong\n"))
 	if err != nil {
-		t.Fatal("could not write pong message:" + err.Error())
+		t.Fatal("could not write pong message: " + err.Error())
 	}
 
 	// TODO(albrow): This hack is necessary in order to give the reader time to

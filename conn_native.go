@@ -3,7 +3,6 @@
 package websocket
 
 import (
-	"fmt"
 	"io"
 	"net"
 	"sync"
@@ -105,12 +104,13 @@ func (c *Conn) Close() error {
 }
 
 func (c *Conn) LocalAddr() net.Addr {
-	return NewAddr(c.Conn.LocalAddr().String())
+	// TODO(albrow): Detect if WSS or WS
+	return NewAddr("ws", c.Conn.LocalAddr().String())
 }
 
 func (c *Conn) RemoteAddr() net.Addr {
-	fmt.Println(c.Conn.RemoteAddr())
-	return NewAddr(c.Conn.RemoteAddr().String())
+	// TODO(albrow): Detect if WSS or WS
+	return NewAddr("ws", c.Conn.RemoteAddr().String())
 }
 
 func (c *Conn) SetDeadline(t time.Time) error {

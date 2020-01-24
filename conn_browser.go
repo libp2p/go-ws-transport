@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"regexp"
 	"strings"
 	"sync"
 	"syscall/js"
@@ -46,7 +47,7 @@ func NewConn(raw js.Value) *Conn {
 		Value:       raw,
 		closeSignal: make(chan struct{}),
 		dataSignal:  make(chan struct{}, 1),
-		localAddr:   NewAddr("0.0.0.0:0"),
+		localAddr:   NewAddr("ws", "0.0.0.0:0"),
 		remoteAddr:  getRemoteAddr(raw),
 	}
 	// Force the JavaScript WebSockets API to use the ArrayBuffer type for
@@ -169,9 +170,32 @@ func (c *Conn) LocalAddr() net.Addr {
 
 func getRemoteAddr(val js.Value) net.Addr {
 	rawURL := val.Get("url").String()
+	if strings.HasPrefix(rawURL, "ws://") {
+		return getRemoteAddrWs(rawURL)
+	} else {
+		// Assume WSS
+		return getRemoteAddrWss(rawURL)
+	}
+}
+
+func getRemoteAddrWs(rawURL string) net.Addr {
 	withoutPrefix := strings.TrimPrefix(rawURL, "ws://")
 	withoutSuffix := strings.TrimSuffix(withoutPrefix, "/")
-	return NewAddr(withoutSuffix)
+	return NewAddr("ws", withoutSuffix)
+}
+
+var includesPortRegex = regexp.MustCompile(`:\d+\b`)
+
+func getRemoteAddrWss(rawURL string) net.Addr {
+	withoutPrefix := strings.TrimPrefix(rawURL, "wss://")
+	withoutSuffix := strings.TrimSuffix(withoutPrefix, "/")
+	// Sometimes the URL string does not include the port in browsers. In this
+	// case, assume we are using the default port, which is 443.
+	includesPort := includesPortRegex.MatchString(withoutSuffix)
+	if !includesPort {
+		return NewAddr("wss", withoutSuffix+":443")
+	}
+	return NewAddr("wss", withoutSuffix)
 }
 
 func (c *Conn) RemoteAddr() net.Addr {

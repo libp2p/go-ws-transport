@@ -22,10 +22,11 @@ func (addr *Addr) Network() string {
 }
 
 // NewAddr creates a new Addr using the given host string
-func NewAddr(host string) *Addr {
+func NewAddr(scheme string, host string) *Addr {
 	return &Addr{
 		URL: &url.URL{
-			Host: host,
+			Scheme: scheme,
+			Host:   host,
 		},
 	}
 }
@@ -36,7 +37,16 @@ func ConvertWebsocketMultiaddrToNetAddr(maddr ma.Multiaddr) (net.Addr, error) {
 		return nil, err
 	}
 
-	return NewAddr(host), nil
+	// Assume ws scheme, then check if this is a wss multiaddr.
+	var scheme = "ws"
+	if _, err := maddr.ValueForProtocol(WssProtocol.Code); err == nil {
+		// This is a wss multiaddr, set scheme to wss.
+		scheme = "wss"
+	} else if err != nil && err != ma.ErrProtocolNotFound {
+		// Unexpected error
+		return nil, err
+	}
+	return NewAddr(scheme, host), nil
 }
 
 func ParseWebsocketNetAddr(a net.Addr) (ma.Multiaddr, error) {
@@ -45,17 +55,29 @@ func ParseWebsocketNetAddr(a net.Addr) (ma.Multiaddr, error) {
 		return nil, fmt.Errorf("not a websocket address")
 	}
 
-	tcpaddr, err := net.ResolveTCPAddr("tcp", wsa.Host)
-	if err != nil {
-		return nil, err
+	// Detect if host is IP address or DNS
+	var tcpma ma.Multiaddr
+	if ip := net.ParseIP(wsa.Hostname()); ip != nil {
+		// Assume IP address
+		tcpaddr, err := net.ResolveTCPAddr("tcp", wsa.Host)
+		if err != nil {
+			return nil, err
+		}
+		tcpma, err = manet.FromNetAddr(tcpaddr)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		// Assume DNS name
+		var err error
+		// TODO(albrow): What about dns6?
+		tcpma, err = ma.NewMultiaddr(fmt.Sprintf("/dns4/%s/tcp/%s", wsa.Hostname(), wsa.Port()))
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	tcpma, err := manet.FromNetAddr(tcpaddr)
-	if err != nil {
-		return nil, err
-	}
-
-	wsma, err := ma.NewMultiaddr("/ws")
+	wsma, err := ma.NewMultiaddr("/" + wsa.Scheme)
 	if err != nil {
 		return nil, err
 	}
