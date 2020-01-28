@@ -51,13 +51,16 @@ func ConvertWebsocketMultiaddrToNetAddr(maddr ma.Multiaddr) (net.Addr, error) {
 
 	// Assume ws scheme, then check if this is a wss multiaddr.
 	var isSecure = false
-	if _, err := maddr.ValueForProtocol(WssProtocol.Code); err == nil {
-		// This is a wss multiaddr, set scheme to wss.
+	switch _, err := maddr.ValueForProtocol(WssProtocol.Code); err {
+	case nil:
+		// This is a wss multiaddr, i.e. secure.
 		isSecure = true
-	} else if err != nil && err != ma.ErrProtocolNotFound {
-		// Unexpected error
+	case ma.ErrProtocolNotFound:
+	default:
+		// This is an unexpected error. Return it.
 		return nil, err
 	}
+
 	return NewAddrWithScheme(host, isSecure), nil
 }
 
