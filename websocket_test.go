@@ -63,10 +63,15 @@ func TestDialWss(t *testing.T) {
 		Secure: insecure.New(rid),
 		Muxer:  new(mplex.Transport),
 	})
-	_, err = tpt.Dial(context.Background(), raddr, rid)
+	conn, err := tpt.Dial(context.Background(), raddr, rid)
 	if err != nil {
 		t.Fatal(err)
 	}
+	stream, err := conn.OpenStream()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer stream.Close()
 }
 
 func TestWebsocketTransport(t *testing.T) {
