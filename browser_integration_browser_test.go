@@ -5,7 +5,6 @@ package websocket
 import (
 	"bufio"
 	"context"
-	"fmt"
 	"net/http"
 	"testing"
 	"time"
@@ -18,8 +17,6 @@ import (
 )
 
 func TestInBrowser(t *testing.T) {
-	fmt.Println("Inside browser test")
-
 	testPingPong(t)
 	testDialWss(t)
 }
