@@ -5,6 +5,8 @@ package websocket
 import (
 	"bufio"
 	"context"
+	"fmt"
+	"net/http"
 	"testing"
 	"time"
 
@@ -16,6 +18,40 @@ import (
 )
 
 func TestInBrowser(t *testing.T) {
+	fmt.Println("Inside browser test")
+
+	testPingPong(t)
+	testDialWss(t)
+}
+
+func testDialWss(t *testing.T) {
+	if _, err := http.Get("nyc-1.bootstrap.libp2p.io"); err != nil {
+		t.Skip("this test requries an internet connection and it seems like we currently don't have one")
+	}
+	tpt := New(&tptu.Upgrader{
+		Secure: insecure.New("browserPeer"),
+		Muxer:  new(mplex.Transport),
+	})
+	knownWssAddr, err := ma.NewMultiaddr("/dns4/nyc-1.bootstrap.libp2p.io/tcp/443/wss")
+	if err != nil {
+		t.Fatal(err)
+	}
+	knownWssPeerID, err := peer.IDB58Decode("QmSoLueR4xBeUbY9WZ9xGUUxunbKWcrNFTDAadQJmocnWm")
+	if err != nil {
+		t.Fatal(err)
+	}
+	conn, err := tpt.Dial(context.Background(), knownWssAddr, knownWssPeerID)
+	if err != nil {
+		t.Fatal("could not dial known WSS addr: " + err.Error())
+	}
+	stream, err := conn.OpenStream()
+	if err != nil {
+		t.Fatal("could not open stream: " + err.Error())
+	}
+	defer stream.Close()
+}
+
+func testPingPong(t *testing.T) {
 	tpt := New(&tptu.Upgrader{
 		Secure: insecure.New("browserPeer"),
 		Muxer:  new(mplex.Transport),
@@ -29,19 +65,6 @@ func TestInBrowser(t *testing.T) {
 		t.Fatal("could not dial server: " + err.Error())
 	}
 	defer conn.Close()
-
-	knownWssAddr, err := ma.NewMultiaddr("/dns4/nyc-1.bootstrap.libp2p.io/tcp/443/wss")
-	if err != nil {
-		t.Fatal(err)
-	}
-	knownWssPeerID, err := peer.IDB58Decode("QmSoLueR4xBeUbY9WZ9xGUUxunbKWcrNFTDAadQJmocnWm")
-	if err != nil {
-		t.Fatal(err)
-	}
-	_, err = tpt.Dial(context.Background(), knownWssAddr, knownWssPeerID)
-	if err != nil {
-		t.Fatal("could not dial known WSS addr: " + err.Error())
-	}
 
 	stream, err := conn.AcceptStream()
 	if err != nil {
