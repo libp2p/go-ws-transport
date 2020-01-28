@@ -21,8 +21,20 @@ func (addr *Addr) Network() string {
 	return "websocket"
 }
 
-// NewAddr creates a new Addr using the given host string
-func NewAddr(scheme string, host string) *Addr {
+// Deprecated. Use NewAddrWithSchemeAndDNSVersion.
+func NewAddr(host string) *Addr {
+	// Older versions of the transport only supported insecure connections (i.e.
+	// WS instead of WSS). Assume that is the case here.
+	return NewAddrWithScheme(host, false)
+}
+
+// NewAddrWithScheme creates a new Addr using the given host string. isSecure
+// should be true for WSS connections and false for WS.
+func NewAddrWithScheme(host string, isSecure bool) *Addr {
+	scheme := "ws"
+	if isSecure {
+		scheme = "wss"
+	}
 	return &Addr{
 		URL: &url.URL{
 			Scheme: scheme,
@@ -38,15 +50,15 @@ func ConvertWebsocketMultiaddrToNetAddr(maddr ma.Multiaddr) (net.Addr, error) {
 	}
 
 	// Assume ws scheme, then check if this is a wss multiaddr.
-	var scheme = "ws"
+	var isSecure = false
 	if _, err := maddr.ValueForProtocol(WssProtocol.Code); err == nil {
 		// This is a wss multiaddr, set scheme to wss.
-		scheme = "wss"
+		isSecure = true
 	} else if err != nil && err != ma.ErrProtocolNotFound {
 		// Unexpected error
 		return nil, err
 	}
-	return NewAddr(scheme, host), nil
+	return NewAddrWithScheme(host, isSecure), nil
 }
 
 func ParseWebsocketNetAddr(a net.Addr) (ma.Multiaddr, error) {

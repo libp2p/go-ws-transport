@@ -105,12 +105,12 @@ func (c *Conn) Close() error {
 
 func (c *Conn) LocalAddr() net.Addr {
 	// TODO(albrow): Detect if WSS or WS
-	return NewAddr("ws", c.Conn.LocalAddr().String())
+	return NewAddrWithScheme(c.Conn.LocalAddr().String(), false)
 }
 
 func (c *Conn) RemoteAddr() net.Addr {
 	// TODO(albrow): Detect if WSS or WS
-	return NewAddr("ws", c.Conn.RemoteAddr().String())
+	return NewAddrWithScheme(c.Conn.RemoteAddr().String(), false)
 }
 
 func (c *Conn) SetDeadline(t time.Time) error {

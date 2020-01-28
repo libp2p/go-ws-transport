@@ -47,7 +47,7 @@ func NewConn(raw js.Value) *Conn {
 		Value:       raw,
 		closeSignal: make(chan struct{}),
 		dataSignal:  make(chan struct{}, 1),
-		localAddr:   NewAddr("ws", "0.0.0.0:0"),
+		localAddr:   NewAddrWithScheme("0.0.0.0:0", false),
 		remoteAddr:  getRemoteAddr(raw),
 	}
 	// Force the JavaScript WebSockets API to use the ArrayBuffer type for
@@ -181,7 +181,7 @@ func getRemoteAddr(val js.Value) net.Addr {
 func getRemoteAddrWs(rawURL string) net.Addr {
 	withoutPrefix := strings.TrimPrefix(rawURL, "ws://")
 	withoutSuffix := strings.TrimSuffix(withoutPrefix, "/")
-	return NewAddr("ws", withoutSuffix)
+	return NewAddrWithScheme(withoutSuffix, false)
 }
 
 var includesPortRegex = regexp.MustCompile(`:\d+\b`)
@@ -193,9 +193,9 @@ func getRemoteAddrWss(rawURL string) net.Addr {
 	// case, assume we are using the default port, which is 443.
 	includesPort := includesPortRegex.MatchString(withoutSuffix)
 	if !includesPort {
-		return NewAddr("wss", withoutSuffix+":443")
+		return NewAddrWithScheme(withoutSuffix+":443", true)
 	}
-	return NewAddr("wss", withoutSuffix)
+	return NewAddrWithScheme(withoutSuffix, true)
 }
 
 func (c *Conn) RemoteAddr() net.Addr {

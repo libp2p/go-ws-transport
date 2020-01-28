@@ -37,7 +37,7 @@ func TestParseWebsocketNetAddr(t *testing.T) {
 		t.Fatalf("expect \"not a websocket address\", got \"%s\"", err)
 	}
 
-	wsAddr := NewAddr("ws", "127.0.0.1:5555")
+	wsAddr := NewAddrWithScheme("127.0.0.1:5555", false)
 	parsed, err := ParseWebsocketNetAddr(wsAddr)
 	if err != nil {
 		t.Fatal(err)
