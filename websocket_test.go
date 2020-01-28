@@ -7,6 +7,7 @@ import (
 	"context"
 	"io"
 	"io/ioutil"
+	"net"
 	"testing"
 	"testing/iotest"
 
@@ -46,6 +47,9 @@ func TestCanDial(t *testing.T) {
 }
 
 func TestDialWss(t *testing.T) {
+	if _, err := net.LookupIP("nyc-1.bootstrap.libp2p.io"); err != nil {
+		t.Skip("this test requries an internet connection and it seems like we currently don't have one")
+	}
 	raddr, err := ma.NewMultiaddr("/dns4/nyc-1.bootstrap.libp2p.io/tcp/443/wss")
 	if err != nil {
 		t.Fatal(err)
@@ -56,7 +60,7 @@ func TestDialWss(t *testing.T) {
 	}
 
 	tpt := New(&tptu.Upgrader{
-		Secure: insecure.New("QmSoLueR4xBeUbY9WZ9xGUUxunbKWcrNFTDAadQJmocnWm"),
+		Secure: insecure.New(rid),
 		Muxer:  new(mplex.Transport),
 	})
 	_, err = tpt.Dial(context.Background(), raddr, rid)
