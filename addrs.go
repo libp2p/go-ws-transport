@@ -70,8 +70,7 @@ func ParseWebsocketNetAddr(a net.Addr) (ma.Multiaddr, error) {
 	} else {
 		// Assume DNS name
 		var err error
-		// TODO(albrow): What about dns6?
-		tcpma, err = ma.NewMultiaddr(fmt.Sprintf("/dns4/%s/tcp/%s", wsa.Hostname(), wsa.Port()))
+		tcpma, err = ma.NewMultiaddr(fmt.Sprintf("/dns/%s/tcp/%s", wsa.Hostname(), wsa.Port()))
 		if err != nil {
 			return nil, err
 		}

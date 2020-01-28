@@ -24,7 +24,7 @@ func TestCanDial(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	addrWss, err := ma.NewMultiaddr("/dns4/example.com/tcp/5555/wss")
+	addrWss, err := ma.NewMultiaddr("/dns/example.com/tcp/5555/wss")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -50,7 +50,7 @@ func TestDialWss(t *testing.T) {
 	if _, err := net.LookupIP("nyc-1.bootstrap.libp2p.io"); err != nil {
 		t.Skip("this test requries an internet connection and it seems like we currently don't have one")
 	}
-	raddr, err := ma.NewMultiaddr("/dns4/nyc-1.bootstrap.libp2p.io/tcp/443/wss")
+	raddr, err := ma.NewMultiaddr("/dns/nyc-1.bootstrap.libp2p.io/tcp/443/wss")
 	if err != nil {
 		t.Fatal(err)
 	}

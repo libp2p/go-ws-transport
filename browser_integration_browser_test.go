@@ -32,7 +32,7 @@ func testDialWss(t *testing.T) {
 		Secure: insecure.New("browserPeer"),
 		Muxer:  new(mplex.Transport),
 	})
-	knownWssAddr, err := ma.NewMultiaddr("/dns4/nyc-1.bootstrap.libp2p.io/tcp/443/wss")
+	knownWssAddr, err := ma.NewMultiaddr("/dns/nyc-1.bootstrap.libp2p.io/tcp/443/wss")
 	if err != nil {
 		t.Fatal(err)
 	}
