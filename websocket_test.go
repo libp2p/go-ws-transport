@@ -5,6 +5,7 @@ package websocket
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"io"
 	"io/ioutil"
 	"net"
@@ -59,7 +60,10 @@ func TestDialWss(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	tpt := New(&tptu.Upgrader{
+	tlsConfig := &tls.Config{
+		InsecureSkipVerify: true,
+	}
+	tpt := NewWithOptions(TLSClientConfig(tlsConfig))(&tptu.Upgrader{
 		Secure: insecure.New(rid),
 		Muxer:  new(mplex.Transport),
 	})
@@ -94,7 +98,10 @@ func TestWebsocketListen(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	tpt := &WebsocketTransport{}
+	tpt := New(&tptu.Upgrader{
+		Secure: insecure.New("listener"),
+		Muxer:  new(mplex.Transport),
+	})
 	l, err := tpt.maListen(zero)
 	if err != nil {
 		t.Fatal(err)
@@ -144,7 +151,10 @@ func TestConcurrentClose(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	tpt := &WebsocketTransport{}
+	tpt := New(&tptu.Upgrader{
+		Secure: insecure.New("insecure"),
+		Muxer:  new(mplex.Transport),
+	})
 	l, err := tpt.maListen(zero)
 	if err != nil {
 		t.Fatal(err)
@@ -185,7 +195,10 @@ func TestWriteZero(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	tpt := &WebsocketTransport{}
+	tpt := New(&tptu.Upgrader{
+		Secure: insecure.New("insecure"),
+		Muxer:  new(mplex.Transport),
+	})
 	l, err := tpt.maListen(zero)
 	if err != nil {
 		t.Fatal(err)

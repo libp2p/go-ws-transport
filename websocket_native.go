@@ -4,33 +4,59 @@ package websocket
 
 import (
 	"context"
-	"crypto/tls"
 	"net"
-	"net/http"
 	"net/url"
 
 	ws "github.com/gorilla/websocket"
 	"github.com/libp2p/go-libp2p-core/transport"
+	tptu "github.com/libp2p/go-libp2p-transport-upgrader"
 	ma "github.com/multiformats/go-multiaddr"
 	manet "github.com/multiformats/go-multiaddr-net"
 )
 
-// Default gorilla upgrader
-var upgrader = ws.Upgrader{
-	// Allow requests from *all* origins.
-	CheckOrigin: func(r *http.Request) bool {
-		return true
-	},
+// WebsocketTransport is the actual go-libp2p transport
+type WebsocketTransport struct {
+	Upgrader *tptu.Upgrader
+	Config   *WebsocketConfig
+	dialer   *ws.Dialer
 }
 
-var wsDialer *ws.Dialer
+func New(u *tptu.Upgrader) *WebsocketTransport {
+	return &WebsocketTransport{
+		Upgrader: u,
+		Config:   DefaultWebsocketConfig(),
+		dialer:   ws.DefaultDialer,
+	}
+}
 
-func init() {
-	// Initialize our own wsDialer which skips TLS verification.
-	wsDialer = new(ws.Dialer)
-	(*wsDialer) = *ws.DefaultDialer
-	wsDialer.TLSClientConfig = &tls.Config{
-		InsecureSkipVerify: true,
+// Option is the type implemented by functional options.
+//
+// Actual options that one can use vary based on build target environment, i.e.
+// the options available on the browser differ from those available natively.
+type Option func(cfg *WebsocketConfig) error
+
+// NewWithOptions returns a WebsocketTransport constructor function compatible
+// with the libp2p.New host constructor.
+func NewWithOptions(opts ...Option) func(u *tptu.Upgrader) *WebsocketTransport {
+	c := DefaultWebsocketConfig()
+
+	// Apply functional options.
+	for _, o := range opts {
+		o(c)
+	}
+
+	// Configure ws.Dialer based on given TLSClientConfig
+	dialer := new(ws.Dialer)
+	(*dialer) = *ws.DefaultDialer
+	dialer.TLSClientConfig = c.TLSClientConfig
+
+	return func(u *tptu.Upgrader) *WebsocketTransport {
+		t := &WebsocketTransport{
+			Upgrader: u,
+			Config:   c,
+			dialer:   dialer,
+		}
+		return t
 	}
 }
 
@@ -40,7 +66,7 @@ func (t *WebsocketTransport) maDial(ctx context.Context, raddr ma.Multiaddr) (ma
 		return nil, err
 	}
 
-	wscon, _, err := wsDialer.Dial(wsurl, nil)
+	wscon, _, err := t.dialer.Dial(wsurl, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -101,9 +127,10 @@ func (t *WebsocketTransport) wrapListener(l net.Listener, origin *url.URL) (*lis
 	laddr = laddr.Encapsulate(wsma)
 
 	return &listener{
-		laddr:    laddr,
-		Listener: l,
-		incoming: make(chan *Conn),
-		closed:   make(chan struct{}),
+		websocketUpgrader: t.Config.WebsocketUpgrader,
+		laddr:             laddr,
+		Listener:          l,
+		incoming:          make(chan *Conn),
+		closed:            make(chan struct{}),
 	}, nil
 }

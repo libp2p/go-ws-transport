@@ -8,9 +8,19 @@ import (
 	"syscall/js"
 
 	"github.com/libp2p/go-libp2p-core/transport"
+	tptu "github.com/libp2p/go-libp2p-transport-upgrader"
 	ma "github.com/multiformats/go-multiaddr"
 	manet "github.com/multiformats/go-multiaddr-net"
 )
+
+// WebsocketTransport is the actual go-libp2p transport
+type WebsocketTransport struct {
+	Upgrader *tptu.Upgrader
+}
+
+func New(u *tptu.Upgrader) *WebsocketTransport {
+	return &WebsocketTransport{u}
+}
 
 func (t *WebsocketTransport) maDial(ctx context.Context, raddr ma.Multiaddr) (manet.Conn, error) {
 	wsurl, err := parseMultiaddr(raddr)

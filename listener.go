@@ -7,14 +7,15 @@ import (
 	"net"
 	"net/http"
 
+	ws "github.com/gorilla/websocket"
 	ma "github.com/multiformats/go-multiaddr"
 	manet "github.com/multiformats/go-multiaddr-net"
 )
 
 type listener struct {
 	net.Listener
-
-	laddr ma.Multiaddr
+	websocketUpgrader *ws.Upgrader
+	laddr             ma.Multiaddr
 
 	closed   chan struct{}
 	incoming chan *Conn
@@ -26,7 +27,7 @@ func (l *listener) serve() {
 }
 
 func (l *listener) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	c, err := upgrader.Upgrade(w, r, nil)
+	c, err := l.websocketUpgrader.Upgrade(w, r, nil)
 	if err != nil {
 		// The upgrader writes a response for us.
 		return
