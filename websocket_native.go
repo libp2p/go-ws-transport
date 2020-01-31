@@ -29,12 +29,6 @@ func New(u *tptu.Upgrader) *WebsocketTransport {
 	}
 }
 
-// Option is the type implemented by functional options.
-//
-// Actual options that one can use vary based on build target environment, i.e.
-// the options available on the browser differ from those available natively.
-type Option func(cfg *WebsocketConfig) error
-
 // NewWithOptions returns a WebsocketTransport constructor function compatible
 // with the libp2p.New host constructor.
 func NewWithOptions(opts ...Option) func(u *tptu.Upgrader) *WebsocketTransport {

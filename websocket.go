@@ -9,6 +9,12 @@ import (
 	ma "github.com/multiformats/go-multiaddr"
 )
 
+// Option is the type implemented by functional options.
+//
+// Actual options that one can use vary based on build target environment, i.e.
+// the options available on the browser differ from those available natively.
+type Option func(cfg *WebsocketConfig) error
+
 var _ transport.Transport = (*WebsocketTransport)(nil)
 
 func (t *WebsocketTransport) CanDial(a ma.Multiaddr) bool {

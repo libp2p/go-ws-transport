@@ -16,10 +16,34 @@ import (
 // WebsocketTransport is the actual go-libp2p transport
 type WebsocketTransport struct {
 	Upgrader *tptu.Upgrader
+	Config   *WebsocketConfig
 }
 
 func New(u *tptu.Upgrader) *WebsocketTransport {
-	return &WebsocketTransport{u}
+	return &WebsocketTransport{
+		Upgrader: u,
+		Config:   DefaultWebsocketConfig(),
+	}
+}
+
+// NewWithOptions returns a WebsocketTransport constructor function compatible
+// with the libp2p.New host constructor. Currently in the browser no options
+// are supported.
+func NewWithOptions(opts ...Option) func(u *tptu.Upgrader) *WebsocketTransport {
+	c := DefaultWebsocketConfig()
+
+	// Apply functional options.
+	for _, o := range opts {
+		o(c)
+	}
+
+	return func(u *tptu.Upgrader) *WebsocketTransport {
+		t := &WebsocketTransport{
+			Upgrader: u,
+			Config:   c,
+		}
+		return t
+	}
 }
 
 func (t *WebsocketTransport) maDial(ctx context.Context, raddr ma.Multiaddr) (manet.Conn, error) {
