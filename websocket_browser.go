@@ -5,6 +5,7 @@ package websocket
 import (
 	"context"
 	"errors"
+	"fmt"
 	"syscall/js"
 
 	"github.com/libp2p/go-libp2p-core/transport"
@@ -46,7 +47,19 @@ func NewWithOptions(opts ...Option) func(u *tptu.Upgrader) *WebsocketTransport {
 	}
 }
 
-func (t *WebsocketTransport) maDial(ctx context.Context, raddr ma.Multiaddr) (manet.Conn, error) {
+func (t *WebsocketTransport) maDial(ctx context.Context, raddr ma.Multiaddr) (mnc manet.Conn, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			mnc = nil
+			switch e := r.(type) {
+			case error:
+				err = e
+			default:
+				err = fmt.Errorf("recovered from non-error value: (%T) %+v", e, e)
+			}
+		}
+	}()
+
 	wsurl, err := parseMultiaddr(raddr)
 	if err != nil {
 		return nil, err
@@ -58,7 +71,7 @@ func (t *WebsocketTransport) maDial(ctx context.Context, raddr ma.Multiaddr) (ma
 		conn.Close()
 		return nil, err
 	}
-	mnc, err := manet.WrapNetConn(conn)
+	mnc, err = manet.WrapNetConn(conn)
 	if err != nil {
 		conn.Close()
 		return nil, err
