@@ -14,16 +14,11 @@ import (
 //
 // Deprecated: use `ma.ProtocolWithCode(ma.P_WS)
 var WsProtocol = ma.ProtocolWithCode(ma.P_WS)
-var WssProtocol = ma.Protocol{
-	Code:  478,
-	Name:  "wss",
-	VCode: ma.CodeToVarint(478),
-}
 
 // WsFmt is multiaddr formatter for WsProtocol
 var WsFmt = mafmt.And(mafmt.TCP, mafmt.Or(
-	mafmt.Base(WsProtocol.Code),
-	mafmt.Base(WssProtocol.Code),
+	mafmt.Base(ma.P_WS),
+	mafmt.Base(ma.P_WSS),
 ))
 
 // WsCodec is the multiaddr-net codec definition for the websocket transport
@@ -41,11 +36,6 @@ var WssCodec = &manet.NetCodec{
 }
 
 func init() {
-	err := ma.AddProtocol(WssProtocol)
-	if err != nil {
-		panic(fmt.Errorf("error registering websocket secure protocol: %s", err))
-	}
-
 	manet.RegisterNetCodec(WsCodec)
 	manet.RegisterNetCodec(WssCodec)
 }
@@ -94,7 +84,7 @@ func ConvertWebsocketMultiaddrToNetAddr(maddr ma.Multiaddr) (net.Addr, error) {
 
 	// Assume ws scheme, then check if this is a wss multiaddr.
 	var isSecure = false
-	switch _, err := maddr.ValueForProtocol(WssProtocol.Code); err {
+	switch _, err := maddr.ValueForProtocol(ma.P_WSS); err {
 	case nil:
 		// This is a wss multiaddr, i.e. secure.
 		isSecure = true
