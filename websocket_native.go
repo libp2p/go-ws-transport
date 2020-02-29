@@ -60,7 +60,7 @@ func (t *WebsocketTransport) maDial(ctx context.Context, raddr ma.Multiaddr) (ma
 		return nil, err
 	}
 
-	wscon, _, err := t.dialer.Dial(wsurl, nil)
+	wscon, _, err := t.dialer.Dial(wsurl.String(), nil)
 	if err != nil {
 		return nil, err
 	}
