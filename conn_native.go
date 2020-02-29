@@ -5,6 +5,7 @@ package websocket
 import (
 	"io"
 	"net"
+	"net/tls"
 	"sync"
 	"time"
 
@@ -104,13 +105,17 @@ func (c *Conn) Close() error {
 }
 
 func (c *Conn) LocalAddr() net.Addr {
-	// TODO(albrow): Detect if WSS or WS
-	return NewAddrWithScheme(c.Conn.LocalAddr().String(), false)
+	conn := c.Conn.UnderlyingConn()
+	_, isSecure := conn.(*tls.Conn)
+	host := conn.LocalAddr().String()
+	return NewAddrWithScheme(host, isSecure)
 }
 
 func (c *Conn) RemoteAddr() net.Addr {
-	// TODO(albrow): Detect if WSS or WS
-	return NewAddrWithScheme(c.Conn.RemoteAddr().String(), false)
+	conn := c.Conn.UnderlyingConn()
+	_, isSecure := conn.(*tls.Conn)
+	host := conn.RemoteAddr().String()
+	return NewAddrWithScheme(host, isSecure)
 }
 
 func (c *Conn) SetDeadline(t time.Time) error {
