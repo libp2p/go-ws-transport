@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"net/url"
+	"strconv"
 
 	ma "github.com/multiformats/go-multiaddr"
 	mafmt "github.com/multiformats/go-multiaddr-fmt"
@@ -77,24 +78,11 @@ func NewAddrWithScheme(host string, isSecure bool) *Addr {
 }
 
 func ConvertWebsocketMultiaddrToNetAddr(maddr ma.Multiaddr) (net.Addr, error) {
-	_, host, err := manet.DialArgs(maddr)
+	url, err := parseMultiaddr(maddr)
 	if err != nil {
 		return nil, err
 	}
-
-	// Assume ws scheme, then check if this is a wss multiaddr.
-	var isSecure = false
-	switch _, err := maddr.ValueForProtocol(ma.P_WSS); err {
-	case nil:
-		// This is a wss multiaddr, i.e. secure.
-		isSecure = true
-	case ma.ErrProtocolNotFound:
-	default:
-		// This is an unexpected error. Return it.
-		return nil, err
-	}
-
-	return NewAddrWithScheme(host, isSecure), nil
+	return &Addr{URL: url}, nil
 }
 
 func ParseWebsocketNetAddr(a net.Addr) (ma.Multiaddr, error) {
@@ -103,22 +91,37 @@ func ParseWebsocketNetAddr(a net.Addr) (ma.Multiaddr, error) {
 		return nil, fmt.Errorf("not a websocket address")
 	}
 
-	// Detect if host is IP address or DNS
-	var tcpma ma.Multiaddr
-	if ip := net.ParseIP(wsa.Hostname()); ip != nil {
-		// Assume IP address
-		tcpaddr, err := net.ResolveTCPAddr("tcp", wsa.Host)
+	var (
+		tcpma ma.Multiaddr
+		err   error
+		port  int
+		host  = wsa.Hostname()
+	)
+
+	// Get the port
+	if portStr := wsa.Port(); portStr != "" {
+		port, err = strconv.Atoi(portStr)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to parse port '%q': %s", portStr, err)
 		}
-		tcpma, err = manet.FromNetAddr(tcpaddr)
+	} else {
+		return nil, fmt.Errorf("invalid port in url: '%q'", wsa.URL)
+	}
+
+	// NOTE: Ignoring IPv6 zones...
+	// Detect if host is IP address or DNS
+	if ip := net.ParseIP(host); ip != nil {
+		// Assume IP address
+		tcpma, err = manet.FromNetAddr(&net.TCPAddr{
+			IP:   ip,
+			Port: port,
+		})
 		if err != nil {
 			return nil, err
 		}
 	} else {
 		// Assume DNS name
-		var err error
-		tcpma, err = ma.NewMultiaddr(fmt.Sprintf("/dns/%s/tcp/%s", wsa.Hostname(), wsa.Port()))
+		tcpma, err = ma.NewMultiaddr(fmt.Sprintf("/dns/%s/tcp/%d", host, port))
 		if err != nil {
 			return nil, err
 		}
@@ -132,13 +135,34 @@ func ParseWebsocketNetAddr(a net.Addr) (ma.Multiaddr, error) {
 	return tcpma.Encapsulate(wsma), nil
 }
 
-func parseMultiaddr(a ma.Multiaddr) (string, error) {
-	p := a.Protocols()
-
-	_, host, err := manet.DialArgs(a)
-	if err != nil {
-		return "", err
+func parseMultiaddr(maddr ma.Multiaddr) (*url.URL, error) {
+	// Only look at the _last_ component.
+	maddr, wscomponent := ma.SplitLast(maddr)
+	if maddr == nil || wscomponent == nil {
+		return nil, fmt.Errorf("websocket addrs need at least two components")
 	}
 
-	return p[2].Name + "://" + host, nil
+	var scheme string
+	switch wscomponent.Protocol().Code {
+	case ma.P_WS:
+		scheme = "ws"
+	case ma.P_WSS:
+		scheme = "wss"
+	default:
+		return nil, fmt.Errorf("not a websocket multiaddr")
+	}
+
+	network, host, err := manet.DialArgs(maddr)
+	if err != nil {
+		return nil, err
+	}
+	switch network {
+	case "tcp", "tcp4", "tcp6":
+	default:
+		return nil, fmt.Errorf("unsupported websocket network %s", network)
+	}
+	return &url.URL{
+		Scheme: scheme,
+		Host:   host,
+	}, nil
 }

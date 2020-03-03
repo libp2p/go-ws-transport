@@ -17,7 +17,7 @@ func TestMultiaddrParsing(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if wsaddr != "ws://127.0.0.1:5555" {
+	if wsaddr.String() != "ws://127.0.0.1:5555" {
 		t.Fatalf("expected ws://127.0.0.1:5555, got %s", wsaddr)
 	}
 }
