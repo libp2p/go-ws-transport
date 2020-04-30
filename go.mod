@@ -8,7 +8,7 @@ require (
 	github.com/libp2p/go-libp2p-transport-upgrader v0.2.0
 	github.com/multiformats/go-multiaddr v0.2.1
 	github.com/multiformats/go-multiaddr-fmt v0.1.0
-	github.com/multiformats/go-multiaddr-net v0.1.4
+	github.com/multiformats/go-multiaddr-net v0.1.5
 )
 
 go 1.13
