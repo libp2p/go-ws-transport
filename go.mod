@@ -2,7 +2,7 @@ module github.com/libp2p/go-ws-transport
 
 require (
 	github.com/gorilla/websocket v1.4.2
-	github.com/libp2p/go-libp2p-core v0.5.1
+	github.com/libp2p/go-libp2p-core v0.5.5
 	github.com/libp2p/go-libp2p-mplex v0.2.3
 	github.com/libp2p/go-libp2p-testing v0.1.1
 	github.com/libp2p/go-libp2p-transport-upgrader v0.2.0
