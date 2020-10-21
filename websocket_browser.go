@@ -29,7 +29,7 @@ func (t *WebsocketTransport) maDial(ctx context.Context, raddr ma.Multiaddr) (ma
 		conn.Close()
 		return nil, err
 	}
-	
+
 	return mnc, nil
 }
 
