@@ -4,6 +4,7 @@ package websocket
 
 import (
 	"bufio"
+	"context"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -68,7 +69,7 @@ func TestInBrowser(t *testing.T) {
 			t.Fatal("SERVER:", err)
 		}
 		defer conn.Close()
-		stream, err := conn.OpenStream()
+		stream, err := conn.OpenStream(context.Background())
 		if err != nil {
 			t.Fatal("SERVER: could not open stream:", err)
 		}
