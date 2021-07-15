@@ -1,4 +1,4 @@
-// +build !js
+// +build !js,!windows
 
 package websocket
 

@@ -10,4 +10,4 @@ require (
 	github.com/multiformats/go-multiaddr-fmt v0.1.0
 )
 
-go 1.13
+go 1.15
