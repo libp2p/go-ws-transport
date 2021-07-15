@@ -164,11 +164,11 @@ func TestWriteZero(t *testing.T) {
 
 	go func() {
 		c, err := tpt.maDial(context.Background(), l.Multiaddr())
-		defer c.Close()
 		if err != nil {
 			t.Error(err)
 			return
 		}
+		defer c.Close()
 
 		for i := 0; i < 100; i++ {
 			n, err := c.Write(msg)
@@ -183,10 +183,10 @@ func TestWriteZero(t *testing.T) {
 	}()
 
 	c, err := l.Accept()
-	defer c.Close()
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer c.Close()
 	buf := make([]byte, 100)
 	n, err := c.Read(buf)
 	if n != 0 {

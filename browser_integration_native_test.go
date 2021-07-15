@@ -58,33 +58,33 @@ func TestInBrowser(t *testing.T) {
 		})
 		addr, err := ma.NewMultiaddr("/ip4/127.0.0.1/tcp/5555/ws")
 		if err != nil {
-			t.Fatal("SERVER:", err)
+			t.Error("SERVER:", err)
 		}
 		listener, err := tpt.Listen(addr)
 		if err != nil {
-			t.Fatal("SERVER:", err)
+			t.Error("SERVER:", err)
 		}
 		conn, err := listener.Accept()
 		if err != nil {
-			t.Fatal("SERVER:", err)
+			t.Error("SERVER:", err)
 		}
 		defer conn.Close()
 		stream, err := conn.OpenStream(context.Background())
 		if err != nil {
-			t.Fatal("SERVER: could not open stream:", err)
+			t.Error("SERVER: could not open stream:", err)
 		}
 		defer stream.Close()
 		buf := bufio.NewReader(stream)
 		if _, err := stream.Write([]byte("ping\n")); err != nil {
-			t.Fatal("SERVER:", err)
+			t.Error("SERVER:", err)
 		}
 		msg, err := buf.ReadString('\n')
 		if err != nil {
-			t.Fatal("SERVER: could not read pong message:" + err.Error())
+			t.Error("SERVER: could not read pong message:" + err.Error())
 		}
 		expected := "pong\n"
 		if msg != expected {
-			t.Fatalf("SERVER: Received wrong message. Expected %q but got %q", expected, msg)
+			t.Errorf("SERVER: Received wrong message. Expected %q but got %q", expected, msg)
 		}
 	}()
 

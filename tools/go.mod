@@ -1,5 +1,5 @@
 module github.com/libp2p/go-ws-transport/tools
 
-go 1.13
+go 1.15
 
-require github.com/agnivade/wasmbrowsertest v0.3.1
+require github.com/agnivade/wasmbrowsertest v0.3.5

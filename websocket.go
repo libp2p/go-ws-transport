@@ -20,20 +20,13 @@ var WsProtocol = ma.ProtocolWithCode(ma.P_WS)
 // WsFmt is multiaddr formatter for WsProtocol
 var WsFmt = mafmt.And(mafmt.TCP, mafmt.Base(ma.P_WS))
 
-// WsCodec is the multiaddr-net codec definition for the websocket transport
-var WsCodec = &manet.NetCodec{
-	NetAddrNetworks:  []string{"websocket"},
-	ProtocolName:     "ws",
-	ConvertMultiaddr: ConvertWebsocketMultiaddrToNetAddr,
-	ParseNetAddr:     ParseWebsocketNetAddr,
-}
-
 // This is _not_ WsFmt because we want the transport to stick to dialing fully
 // resolved addresses.
 var dialMatcher = mafmt.And(mafmt.IP, mafmt.Base(ma.P_TCP), mafmt.Base(ma.P_WS))
 
 func init() {
-	manet.RegisterNetCodec(WsCodec)
+	manet.RegisterFromNetAddr(ParseWebsocketNetAddr, "websocket")
+	manet.RegisterToNetAddr(ConvertWebsocketMultiaddrToNetAddr, "ws")
 }
 
 var _ transport.Transport = (*WebsocketTransport)(nil)

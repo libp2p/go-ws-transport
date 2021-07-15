@@ -1,5 +1,5 @@
-github.com/agnivade/wasmbrowsertest v0.3.1 h1:bA9aA+bcp7KuqGvmCuBdnMqy6PXxFjYP7FxsaT+JSqc=
-github.com/agnivade/wasmbrowsertest v0.3.1/go.mod h1:zQt6ZTdl338xxRaMW395qccVE2eQm0SjC/SDz0mPWQI=
+github.com/agnivade/wasmbrowsertest v0.3.5 h1:U8ICR7Xa3LBGQb57HtbbXf5KAMjQhiWrCWlr1kD77Cw=
+github.com/agnivade/wasmbrowsertest v0.3.5/go.mod h1:zQt6ZTdl338xxRaMW395qccVE2eQm0SjC/SDz0mPWQI=
 github.com/chromedp/cdproto v0.0.0-20190614062957-d6d2f92b486d/go.mod h1:S8mB5wY3vV+vRIzf39xDXsw3XKYewW9X6rW2aEmkrSw=
 github.com/chromedp/cdproto v0.0.0-20190621002710-8cbd498dd7a0 h1:4Wocv9f+KWF4GtZudyrn8JSBTgHQbGp86mcsoH7j1iQ=
 github.com/chromedp/cdproto v0.0.0-20190621002710-8cbd498dd7a0/go.mod h1:S8mB5wY3vV+vRIzf39xDXsw3XKYewW9X6rW2aEmkrSw=
