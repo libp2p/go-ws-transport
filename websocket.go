@@ -12,11 +12,6 @@ import (
 	manet "github.com/multiformats/go-multiaddr/net"
 )
 
-// WsProtocol is the multiaddr protocol definition for this transport.
-//
-// Deprecated: use `ma.ProtocolWithCode(ma.P_WS)
-var WsProtocol = ma.ProtocolWithCode(ma.P_WS)
-
 // WsFmt is multiaddr formatter for WsProtocol
 var WsFmt = mafmt.And(mafmt.TCP, mafmt.Base(ma.P_WS))
 
@@ -45,7 +40,7 @@ func (t *WebsocketTransport) CanDial(a ma.Multiaddr) bool {
 }
 
 func (t *WebsocketTransport) Protocols() []int {
-	return []int{WsProtocol.Code}
+	return []int{ma.ProtocolWithCode(ma.P_WS).Code}
 }
 
 func (t *WebsocketTransport) Proxy() bool {
