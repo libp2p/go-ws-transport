@@ -8,22 +8,32 @@ import (
 	"testing"
 	"time"
 
-	"github.com/libp2p/go-libp2p-core/sec/insecure"
+	"github.com/libp2p/go-libp2p-core/crypto"
+	"github.com/libp2p/go-libp2p-core/peer"
+	"github.com/libp2p/go-libp2p-core/test"
 	mplex "github.com/libp2p/go-libp2p-mplex"
 	tptu "github.com/libp2p/go-libp2p-transport-upgrader"
 	ma "github.com/multiformats/go-multiaddr"
 )
 
 func TestInBrowser(t *testing.T) {
+	priv, _, err := test.RandTestKeyPair(crypto.Ed25519, 256)
+	if err != nil {
+		t.Fatal(err)
+	}
+	id, err := peer.IDFromPrivateKey(priv)
+	if err != nil {
+		t.Fatal(err)
+	}
 	tpt := New(&tptu.Upgrader{
-		Secure: insecure.New("browserPeer"),
+		Secure: newSecureMuxer(t, id),
 		Muxer:  new(mplex.Transport),
 	})
 	addr, err := ma.NewMultiaddr("/ip4/127.0.0.1/tcp/5555/ws")
 	if err != nil {
 		t.Fatal("could not parse multiaddress:" + err.Error())
 	}
-	conn, err := tpt.Dial(context.Background(), addr, "serverPeer")
+	conn, err := tpt.Dial(context.Background(), addr, id)
 	if err != nil {
 		t.Fatal("could not dial server:" + err.Error())
 	}

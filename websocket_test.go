@@ -10,7 +10,6 @@ import (
 	"testing"
 	"testing/iotest"
 
-	"github.com/libp2p/go-libp2p-core/sec/insecure"
 	mplex "github.com/libp2p/go-libp2p-mplex"
 	ttransport "github.com/libp2p/go-libp2p-testing/suites/transport"
 	tptu "github.com/libp2p/go-libp2p-transport-upgrader"
@@ -44,11 +43,11 @@ func TestCanDial(t *testing.T) {
 func TestWebsocketTransport(t *testing.T) {
 	t.Skip("This test is failing, see https://github.com/libp2p/go-ws-transport/issues/99")
 	ta := New(&tptu.Upgrader{
-		Secure: insecure.New("peerA"),
+		Secure: newSecureMuxer(t, "peerA"),
 		Muxer:  new(mplex.Transport),
 	})
 	tb := New(&tptu.Upgrader{
-		Secure: insecure.New("peerB"),
+		Secure: newSecureMuxer(t, "peerB"),
 		Muxer:  new(mplex.Transport),
 	})
 
