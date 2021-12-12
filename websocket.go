@@ -39,8 +39,10 @@ func (t *WebsocketTransport) CanDial(a ma.Multiaddr) bool {
 	return dialMatcher.Matches(a)
 }
 
-func (t *WebsocketTransport) Protocols() []int {
-	return []int{ma.ProtocolWithCode(ma.P_WS).Code}
+var protoWS = ma.ProtocolWithCode(ma.P_WS)
+
+func (t *WebsocketTransport) Protocols() []ma.Protocol {
+	return []ma.Protocol{protoWS}
 }
 
 func (t *WebsocketTransport) Proxy() bool {
