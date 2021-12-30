@@ -4,9 +4,12 @@ package websocket
 import (
 	"context"
 
+	"github.com/libp2p/go-libp2p-core/network"
 	"github.com/libp2p/go-libp2p-core/peer"
 	"github.com/libp2p/go-libp2p-core/transport"
+
 	tptu "github.com/libp2p/go-libp2p-transport-upgrader"
+
 	ma "github.com/multiformats/go-multiaddr"
 	mafmt "github.com/multiformats/go-multiaddr-fmt"
 	manet "github.com/multiformats/go-multiaddr/net"
@@ -52,5 +55,5 @@ func (t *WebsocketTransport) Dial(ctx context.Context, raddr ma.Multiaddr, p pee
 	if err != nil {
 		return nil, err
 	}
-	return t.Upgrader.UpgradeOutbound(ctx, t, macon, p)
+	return t.Upgrader.Upgrade(ctx, t, macon, network.DirOutbound, p)
 }
