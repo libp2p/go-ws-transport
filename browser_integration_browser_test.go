@@ -26,10 +26,11 @@ func TestInBrowser(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	tpt := New(&tptu.Upgrader{
-		Secure: newSecureMuxer(t, id),
-		Muxer:  new(mplex.Transport),
-	})
+	u, err := tptu.New(newSecureMuxer(t, id), new(mplex.Transport))
+	if err != nil {
+		t.Fatal(err)
+	}
+	tpt := New(u)
 	addr, err := ma.NewMultiaddr("/ip4/127.0.0.1/tcp/5555/ws")
 	if err != nil {
 		t.Fatal("could not parse multiaddress:" + err.Error())
