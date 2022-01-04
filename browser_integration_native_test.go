@@ -56,7 +56,7 @@ func TestInBrowser(t *testing.T) {
 		if err != nil {
 			t.Error("SERVER:", err)
 		}
-		tpt := New(u)
+		tpt := New(u, nil)
 		addr, err := ma.NewMultiaddr("/ip4/127.0.0.1/tcp/5555/ws")
 		if err != nil {
 			t.Error("SERVER:", err)

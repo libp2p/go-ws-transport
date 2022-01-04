@@ -47,12 +47,12 @@ func TestWebsocketTransport(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	ta := New(ua)
+	ta := New(ua, nil)
 	ub, err := tptu.New(newSecureMuxer(t, "peerB"), new(mplex.Transport))
 	if err != nil {
 		t.Fatal(err)
 	}
-	tb := New(ub)
+	tb := New(ub, nil)
 
 	zero := "/ip4/127.0.0.1/tcp/0/ws"
 	ttransport.SubtestTransport(t, ta, tb, zero, "peerA")
