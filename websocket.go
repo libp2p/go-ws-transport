@@ -29,7 +29,7 @@ var _ transport.Transport = (*WebsocketTransport)(nil)
 
 // WebsocketTransport is the actual go-libp2p transport
 type WebsocketTransport struct {
-	Upgrader transport.Upgrader
+	upgrader transport.Upgrader
 }
 
 func New(u transport.Upgrader) *WebsocketTransport {
@@ -53,5 +53,5 @@ func (t *WebsocketTransport) Dial(ctx context.Context, raddr ma.Multiaddr, p pee
 	if err != nil {
 		return nil, err
 	}
-	return t.Upgrader.Upgrade(ctx, t, macon, network.DirOutbound, p)
+	return t.upgrader.Upgrade(ctx, t, macon, network.DirOutbound, p)
 }
