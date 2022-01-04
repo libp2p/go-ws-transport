@@ -43,14 +43,16 @@ func TestCanDial(t *testing.T) {
 
 func TestWebsocketTransport(t *testing.T) {
 	t.Skip("This test is failing, see https://github.com/libp2p/go-ws-transport/issues/99")
-	ta := New(&tptu.Upgrader{
-		Secure: newSecureMuxer(t, "peerA"),
-		Muxer:  new(mplex.Transport),
-	})
-	tb := New(&tptu.Upgrader{
-		Secure: newSecureMuxer(t, "peerB"),
-		Muxer:  new(mplex.Transport),
-	})
+	ua, err := tptu.New(newSecureMuxer(t, "peerA"), new(mplex.Transport))
+	if err != nil {
+		t.Fatal(err)
+	}
+	ta := New(ua)
+	ub, err := tptu.New(newSecureMuxer(t, "peerB"), new(mplex.Transport))
+	if err != nil {
+		t.Fatal(err)
+	}
+	tb := New(ub)
 
 	zero := "/ip4/127.0.0.1/tcp/0/ws"
 	ttransport.SubtestTransport(t, ta, tb, zero, "peerA")

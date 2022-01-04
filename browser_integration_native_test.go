@@ -52,10 +52,11 @@ func TestInBrowser(t *testing.T) {
 		defer func() {
 			close(serverDoneSignal)
 		}()
-		tpt := New(&tptu.Upgrader{
-			Secure: newSecureMuxer(t, "serverPeer"),
-			Muxer:  new(mplex.Transport),
-		})
+		u, err := tptu.New(newSecureMuxer(t, "serverPeer"), new(mplex.Transport))
+		if err != nil {
+			t.Error("SERVER:", err)
+		}
+		tpt := New(u)
 		addr, err := ma.NewMultiaddr("/ip4/127.0.0.1/tcp/5555/ws")
 		if err != nil {
 			t.Error("SERVER:", err)
