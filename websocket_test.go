@@ -1,6 +1,3 @@
-//go:build !js
-// +build !js
-
 package websocket
 
 import (
@@ -11,11 +8,30 @@ import (
 	"testing"
 	"testing/iotest"
 
+	csms "github.com/libp2p/go-conn-security-multistream"
+	"github.com/libp2p/go-libp2p-core/crypto"
+	"github.com/libp2p/go-libp2p-core/peer"
+	"github.com/libp2p/go-libp2p-core/sec"
+	"github.com/libp2p/go-libp2p-core/sec/insecure"
+	"github.com/libp2p/go-libp2p-core/test"
+
 	mplex "github.com/libp2p/go-libp2p-mplex"
 	ttransport "github.com/libp2p/go-libp2p-testing/suites/transport"
 	tptu "github.com/libp2p/go-libp2p-transport-upgrader"
 	ma "github.com/multiformats/go-multiaddr"
 )
+
+//lint:ignore U1000 // see https://github.com/dominikh/go-tools/issues/633
+func newSecureMuxer(t *testing.T, id peer.ID) sec.SecureMuxer {
+	t.Helper()
+	priv, _, err := test.RandTestKeyPair(crypto.Ed25519, 256)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var secMuxer csms.SSMuxer
+	secMuxer.AddTransport(insecure.ID, insecure.NewWithIdentity(id, priv))
+	return &secMuxer
+}
 
 func TestCanDial(t *testing.T) {
 	addrWs, err := ma.NewMultiaddr("/ip4/127.0.0.1/tcp/5555/ws")
