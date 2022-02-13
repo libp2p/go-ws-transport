@@ -17,6 +17,19 @@ type listener struct {
 	incoming chan *Conn
 }
 
+func newListener(l net.Listener) (*listener, error) {
+	laddr, err := manet.FromNetAddr(l.Addr())
+	if err != nil {
+		return nil, err
+	}
+	return &listener{
+		Listener: l,
+		laddr:    laddr.Encapsulate(wsma),
+		incoming: make(chan *Conn),
+		closed:   make(chan struct{}),
+	}, nil
+}
+
 func (l *listener) serve() {
 	defer close(l.closed)
 	_ = http.Serve(l.Listener, l)

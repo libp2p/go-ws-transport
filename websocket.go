@@ -133,14 +133,13 @@ func (t *WebsocketTransport) maListen(a ma.Multiaddr) (manet.Listener, error) {
 	if err != nil {
 		return nil, err
 	}
-	malist, err := t.wrapListener(nl)
+	l, err := newListener(nl)
 	if err != nil {
 		nl.Close()
 		return nil, err
 	}
-	go malist.serve()
-
-	return malist, nil
+	go l.serve()
+	return l, nil
 }
 
 func (t *WebsocketTransport) Listen(a ma.Multiaddr) (transport.Listener, error) {
@@ -149,17 +148,4 @@ func (t *WebsocketTransport) Listen(a ma.Multiaddr) (transport.Listener, error) 
 		return nil, err
 	}
 	return t.upgrader.UpgradeListener(t, malist), nil
-}
-
-func (t *WebsocketTransport) wrapListener(l net.Listener) (*listener, error) {
-	laddr, err := manet.FromNetAddr(l.Addr())
-	if err != nil {
-		return nil, err
-	}
-	return &listener{
-		laddr:    laddr.Encapsulate(wsma),
-		Listener: l,
-		incoming: make(chan *Conn),
-		closed:   make(chan struct{}),
-	}, nil
 }
