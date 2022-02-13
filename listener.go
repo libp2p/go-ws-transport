@@ -10,7 +10,8 @@ import (
 )
 
 type listener struct {
-	net.Listener
+	nl net.Listener
+
 	laddr ma.Multiaddr
 
 	closed   chan struct{}
@@ -23,7 +24,7 @@ func newListener(l net.Listener) (*listener, error) {
 		return nil, err
 	}
 	return &listener{
-		Listener: l,
+		nl:       l,
 		laddr:    laddr.Encapsulate(wsma),
 		incoming: make(chan *Conn),
 		closed:   make(chan struct{}),
@@ -32,7 +33,7 @@ func newListener(l net.Listener) (*listener, error) {
 
 func (l *listener) serve() {
 	defer close(l.closed)
-	_ = http.Serve(l.Listener, l)
+	_ = http.Serve(l.nl, l)
 }
 
 func (l *listener) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -67,6 +68,16 @@ func (l *listener) Accept() (manet.Conn, error) {
 	case <-l.closed:
 		return nil, fmt.Errorf("listener is closed")
 	}
+}
+
+func (l *listener) Addr() net.Addr {
+	return l.nl.Addr()
+}
+
+func (l *listener) Close() error {
+	err := l.nl.Close()
+	<-l.closed
+	return err
 }
 
 func (l *listener) Multiaddr() ma.Multiaddr {
