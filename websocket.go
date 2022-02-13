@@ -20,6 +20,8 @@ import (
 // WsFmt is multiaddr formatter for WsProtocol
 var WsFmt = mafmt.And(mafmt.TCP, mafmt.Base(ma.P_WS))
 
+var wsma = ma.StringCast("/ws")
+
 // This is _not_ WsFmt because we want the transport to stick to dialing fully
 // resolved addresses.
 var dialMatcher = mafmt.And(mafmt.IP, mafmt.Base(ma.P_TCP), mafmt.Or(mafmt.Base(ma.P_WS), mafmt.Base(ma.P_WSS)))
@@ -154,14 +156,8 @@ func (t *WebsocketTransport) wrapListener(l net.Listener) (*listener, error) {
 	if err != nil {
 		return nil, err
 	}
-	wsma, err := ma.NewMultiaddr("/ws")
-	if err != nil {
-		return nil, err
-	}
-	laddr = laddr.Encapsulate(wsma)
-
 	return &listener{
-		laddr:    laddr,
+		laddr:    laddr.Encapsulate(wsma),
 		Listener: l,
 		incoming: make(chan *Conn),
 		closed:   make(chan struct{}),
