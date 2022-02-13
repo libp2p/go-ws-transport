@@ -6,7 +6,6 @@ import (
 	"crypto/tls"
 	"net"
 	"net/http"
-	"net/url"
 
 	"github.com/libp2p/go-libp2p-core/network"
 	"github.com/libp2p/go-libp2p-core/peer"
@@ -128,24 +127,15 @@ func (t *WebsocketTransport) maListen(a ma.Multiaddr) (manet.Listener, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	nl, err := net.Listen(lnet, lnaddr)
 	if err != nil {
 		return nil, err
 	}
-
-	u, err := url.Parse("http://" + nl.Addr().String())
+	malist, err := t.wrapListener(nl)
 	if err != nil {
 		nl.Close()
 		return nil, err
 	}
-
-	malist, err := t.wrapListener(nl, u)
-	if err != nil {
-		nl.Close()
-		return nil, err
-	}
-
 	go malist.serve()
 
 	return malist, nil
@@ -159,7 +149,7 @@ func (t *WebsocketTransport) Listen(a ma.Multiaddr) (transport.Listener, error) 
 	return t.upgrader.UpgradeListener(t, malist), nil
 }
 
-func (t *WebsocketTransport) wrapListener(l net.Listener, origin *url.URL) (*listener, error) {
+func (t *WebsocketTransport) wrapListener(l net.Listener) (*listener, error) {
 	laddr, err := manet.FromNetAddr(l.Addr())
 	if err != nil {
 		return nil, err
