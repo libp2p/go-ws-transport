@@ -11,7 +11,6 @@ import (
 
 type listener struct {
 	net.Listener
-
 	laddr ma.Multiaddr
 
 	closed   chan struct{}
@@ -31,7 +30,7 @@ func (l *listener) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	select {
-	case l.incoming <- NewConn(c):
+	case l.incoming <- NewConn(c, false):
 	case <-l.closed:
 		c.Close()
 	}
