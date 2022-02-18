@@ -1,13 +1,19 @@
 package websocket
 
 import (
-	"bytes"
 	"context"
+	"crypto/rand"
+	"crypto/rsa"
 	"crypto/tls"
+	"crypto/x509"
+	"crypto/x509/pkix"
+	"fmt"
 	"io"
 	"io/ioutil"
+	"math/big"
 	"net"
 	"testing"
+	"time"
 
 	"github.com/libp2p/go-libp2p-core/crypto"
 	"github.com/libp2p/go-libp2p-core/network"
@@ -21,7 +27,9 @@ import (
 	mplex "github.com/libp2p/go-libp2p-mplex"
 	ttransport "github.com/libp2p/go-libp2p-testing/suites/transport"
 	tptu "github.com/libp2p/go-libp2p-transport-upgrader"
+
 	ma "github.com/multiformats/go-multiaddr"
+	"github.com/stretchr/testify/require"
 )
 
 func newUpgrader(t *testing.T) (peer.ID, transport.Upgrader) {
@@ -47,6 +55,42 @@ func newSecureMuxer(t *testing.T) (peer.ID, sec.SecureMuxer) {
 	var secMuxer csms.SSMuxer
 	secMuxer.AddTransport(insecure.ID, insecure.NewWithIdentity(id, priv))
 	return id, &secMuxer
+}
+
+func lastComponent(t *testing.T, a ma.Multiaddr) ma.Multiaddr {
+	t.Helper()
+	_, wscomponent := ma.SplitLast(a)
+	require.NotNil(t, wscomponent)
+	if wscomponent.Equal(wsma) {
+		return wsma
+	}
+	if wscomponent.Equal(wssma) {
+		return wssma
+	}
+	t.Fatal("expected a ws or wss component")
+	return nil
+}
+
+func generateTLSConfig(t *testing.T) *tls.Config {
+	t.Helper()
+	priv, err := rsa.GenerateKey(rand.Reader, 2048)
+	require.NoError(t, err)
+	tmpl := &x509.Certificate{
+		SerialNumber:          big.NewInt(1),
+		Subject:               pkix.Name{},
+		SignatureAlgorithm:    x509.SHA256WithRSA,
+		NotBefore:             time.Now(),
+		NotAfter:              time.Now().Add(time.Hour), // valid for an hour
+		BasicConstraintsValid: true,
+	}
+	certDER, err := x509.CreateCertificate(rand.Reader, tmpl, tmpl, priv.Public(), priv)
+	require.NoError(t, err)
+	return &tls.Config{
+		Certificates: []tls.Certificate{{
+			PrivateKey:  priv,
+			Certificate: [][]byte{certDER},
+		}},
+	}
 }
 
 func TestCanDial(t *testing.T) {
@@ -105,65 +149,123 @@ func TestWebsocketTransport(t *testing.T) {
 	ttransport.SubtestTransport(t, ta, tb, "/ip4/127.0.0.1/tcp/0/ws", "peerA")
 }
 
-func TestWebsocketListen(t *testing.T) {
-	id, u := newUpgrader(t)
-	tpt, err := New(u, network.NullResourceManager)
-	if err != nil {
-		t.Fatal(err)
+func connectAndExchangeData(t *testing.T, laddr ma.Multiaddr, secure bool) {
+	var opts []Option
+	var tlsConf *tls.Config
+	if secure {
+		tlsConf = generateTLSConfig(t)
+		opts = append(opts, WithTLSConfig(tlsConf))
 	}
-	l, err := tpt.Listen(ma.StringCast("/ip4/127.0.0.1/tcp/0/ws"))
-	if err != nil {
-		t.Fatal(err)
+	server, u := newUpgrader(t)
+	tpt, err := New(u, network.NullResourceManager, opts...)
+	require.NoError(t, err)
+	l, err := tpt.Listen(laddr)
+	require.NoError(t, err)
+	if secure {
+		require.Equal(t, lastComponent(t, l.Multiaddr()), wssma)
+	} else {
+		require.Equal(t, lastComponent(t, l.Multiaddr()), wsma)
 	}
 	defer l.Close()
 
 	msg := []byte("HELLO WORLD")
 
 	go func() {
-		c, err := tpt.Dial(context.Background(), l.Multiaddr(), id)
-		if err != nil {
-			t.Error(err)
-			return
+		var opts []Option
+		if secure {
+			opts = append(opts, WithTLSClientConfig(&tls.Config{InsecureSkipVerify: true}))
 		}
+		_, u := newUpgrader(t)
+		tpt, err := New(u, network.NullResourceManager, opts...)
+		require.NoError(t, err)
+		c, err := tpt.Dial(context.Background(), l.Multiaddr(), server)
+		require.NoError(t, err)
 		str, err := c.OpenStream(context.Background())
-		if err != nil {
-			t.Error(err)
-		}
+		require.NoError(t, err)
 		defer str.Close()
-
-		if _, err = str.Write(msg); err != nil {
-			t.Error(err)
-			return
-		}
+		_, err = str.Write(msg)
+		require.NoError(t, err)
 	}()
 
 	c, err := l.Accept()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	defer c.Close()
 	str, err := c.AcceptStream()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	defer str.Close()
 
 	out, err := ioutil.ReadAll(str)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
+	require.Equal(t, out, msg, "got wrong message")
+}
 
-	if !bytes.Equal(out, msg) {
-		t.Fatal("got wrong message", out, msg)
-	}
+func TestWebsocketConnection(t *testing.T) {
+	t.Run("unencrypted", func(t *testing.T) {
+		connectAndExchangeData(t, ma.StringCast("/ip4/127.0.0.1/tcp/0/ws"), false)
+	})
+	t.Run("encrypted", func(t *testing.T) {
+		connectAndExchangeData(t, ma.StringCast("/ip4/127.0.0.1/tcp/0/wss"), true)
+	})
+}
+
+func TestWebsocketListenSecureFailWithoutTLSConfig(t *testing.T) {
+	_, u := newUpgrader(t)
+	tpt, err := New(u, network.NullResourceManager)
+	require.NoError(t, err)
+	addr := ma.StringCast("/ip4/127.0.0.1/tcp/0/wss")
+	_, err = tpt.Listen(addr)
+	require.EqualError(t, err, fmt.Sprintf("cannot listen on wss address %s without a tls.Config", addr))
+}
+
+func TestWebsocketListenSecureAndInsecure(t *testing.T) {
+	serverID, serverUpgrader := newUpgrader(t)
+	server, err := New(serverUpgrader, network.NullResourceManager, WithTLSConfig(generateTLSConfig(t)))
+	require.NoError(t, err)
+
+	lnInsecure, err := server.Listen(ma.StringCast("/ip4/127.0.0.1/tcp/0/ws"))
+	require.NoError(t, err)
+	lnSecure, err := server.Listen(ma.StringCast("/ip4/127.0.0.1/tcp/0/wss"))
+	require.NoError(t, err)
+
+	t.Run("insecure", func(t *testing.T) {
+		_, clientUpgrader := newUpgrader(t)
+		client, err := New(clientUpgrader, network.NullResourceManager, WithTLSClientConfig(&tls.Config{InsecureSkipVerify: true}))
+		require.NoError(t, err)
+
+		// dialing the insecure address should succeed
+		conn, err := client.Dial(context.Background(), lnInsecure.Multiaddr(), serverID)
+		require.NoError(t, err)
+		defer conn.Close()
+		require.Equal(t, lastComponent(t, conn.RemoteMultiaddr()).String(), wsma.String())
+		require.Equal(t, lastComponent(t, conn.LocalMultiaddr()).String(), wsma.String())
+
+		// dialing the secure address should fail
+		_, err = client.Dial(context.Background(), lnSecure.Multiaddr(), serverID)
+		require.NoError(t, err)
+	})
+
+	t.Run("secure", func(t *testing.T) {
+		_, clientUpgrader := newUpgrader(t)
+		client, err := New(clientUpgrader, network.NullResourceManager, WithTLSClientConfig(&tls.Config{InsecureSkipVerify: true}))
+		require.NoError(t, err)
+
+		// dialing the insecure address should succeed
+		conn, err := client.Dial(context.Background(), lnSecure.Multiaddr(), serverID)
+		require.NoError(t, err)
+		defer conn.Close()
+		require.Equal(t, lastComponent(t, conn.RemoteMultiaddr()), wssma)
+		require.Equal(t, lastComponent(t, conn.LocalMultiaddr()), wssma)
+
+		// dialing the insecure address should fail
+		_, err = client.Dial(context.Background(), lnInsecure.Multiaddr(), serverID)
+		require.NoError(t, err)
+	})
 }
 
 func TestConcurrentClose(t *testing.T) {
 	_, u := newUpgrader(t)
 	tpt, err := New(u, network.NullResourceManager)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	l, err := tpt.maListen(ma.StringCast("/ip4/127.0.0.1/tcp/0/ws"))
 	if err != nil {
 		t.Fatal(err)

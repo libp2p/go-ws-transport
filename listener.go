@@ -1,6 +1,7 @@
 package websocket
 
 import (
+	"crypto/tls"
 	"fmt"
 	"net"
 	"net/http"
@@ -9,17 +10,64 @@ import (
 	manet "github.com/multiformats/go-multiaddr/net"
 )
 
+var (
+	wsma  = ma.StringCast("/ws")
+	wssma = ma.StringCast("/wss")
+)
+
 type listener struct {
-	net.Listener
+	nl     net.Listener
+	server http.Server
+
 	laddr ma.Multiaddr
 
 	closed   chan struct{}
 	incoming chan *Conn
 }
 
+// newListener creates a new listener from a raw net.Listener.
+// tlsConf may be nil (for unencrypted websockets).
+func newListener(a ma.Multiaddr, tlsConf *tls.Config) (*listener, error) {
+	// Only look at the _last_ component.
+	maddr, wscomponent := ma.SplitLast(a)
+	isWSS := wscomponent.Equal(wssma)
+	if isWSS && tlsConf == nil {
+		return nil, fmt.Errorf("cannot listen on wss address %s without a tls.Config", a)
+	}
+	lnet, lnaddr, err := manet.DialArgs(maddr)
+	if err != nil {
+		return nil, err
+	}
+	nl, err := net.Listen(lnet, lnaddr)
+	if err != nil {
+		return nil, err
+	}
+
+	laddr, err := manet.FromNetAddr(nl.Addr())
+	if err != nil {
+		return nil, err
+	}
+
+	ln := &listener{
+		nl:       nl,
+		laddr:    laddr.Encapsulate(wscomponent),
+		incoming: make(chan *Conn),
+		closed:   make(chan struct{}),
+	}
+	ln.server = http.Server{Handler: ln}
+	if isWSS {
+		ln.server.TLSConfig = tlsConf
+	}
+	return ln, nil
+}
+
 func (l *listener) serve() {
 	defer close(l.closed)
-	_ = http.Serve(l.Listener, l)
+	if l.server.TLSConfig == nil {
+		l.server.Serve(l.nl)
+	} else {
+		l.server.ServeTLS(l.nl, "", "")
+	}
 }
 
 func (l *listener) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -54,6 +102,17 @@ func (l *listener) Accept() (manet.Conn, error) {
 	case <-l.closed:
 		return nil, fmt.Errorf("listener is closed")
 	}
+}
+
+func (l *listener) Addr() net.Addr {
+	return l.nl.Addr()
+}
+
+func (l *listener) Close() error {
+	l.server.Close()
+	err := l.nl.Close()
+	<-l.closed
+	return err
 }
 
 func (l *listener) Multiaddr() ma.Multiaddr {

@@ -4,18 +4,18 @@ package websocket
 import (
 	"context"
 	"crypto/tls"
-	"net"
 	"net/http"
-	"net/url"
+	"time"
 
 	"github.com/libp2p/go-libp2p-core/network"
 	"github.com/libp2p/go-libp2p-core/peer"
 	"github.com/libp2p/go-libp2p-core/transport"
 
-	ws "github.com/gorilla/websocket"
 	ma "github.com/multiformats/go-multiaddr"
 	mafmt "github.com/multiformats/go-multiaddr-fmt"
 	manet "github.com/multiformats/go-multiaddr/net"
+
+	ws "github.com/gorilla/websocket"
 )
 
 // WsFmt is multiaddr formatter for WsProtocol
@@ -53,12 +53,21 @@ func WithTLSClientConfig(c *tls.Config) Option {
 	}
 }
 
+// WithTLSConfig sets a TLS configuration for the WebSocket listener.
+func WithTLSConfig(conf *tls.Config) Option {
+	return func(t *WebsocketTransport) error {
+		t.tlsConf = conf
+		return nil
+	}
+}
+
 // WebsocketTransport is the actual go-libp2p transport
 type WebsocketTransport struct {
 	upgrader transport.Upgrader
 	rcmgr    network.ResourceManager
 
 	tlsClientConf *tls.Config
+	tlsConf       *tls.Config
 }
 
 var _ transport.Transport = (*WebsocketTransport)(nil)
@@ -109,13 +118,18 @@ func (t *WebsocketTransport) maDial(ctx context.Context, raddr ma.Multiaddr) (ma
 	if err != nil {
 		return nil, err
 	}
+	isWss := wsurl.Scheme == "wss"
+	dialer := ws.Dialer{HandshakeTimeout: 30 * time.Second}
+	if isWss {
+		dialer.TLSClientConfig = t.tlsClientConf
 
-	wscon, _, err := ws.DefaultDialer.Dial(wsurl.String(), nil)
+	}
+	wscon, _, err := dialer.DialContext(ctx, wsurl.String(), nil)
 	if err != nil {
 		return nil, err
 	}
 
-	mnc, err := manet.WrapNetConn(NewConn(wscon, wsurl.Scheme == "wss"))
+	mnc, err := manet.WrapNetConn(NewConn(wscon, isWss))
 	if err != nil {
 		wscon.Close()
 		return nil, err
@@ -124,31 +138,12 @@ func (t *WebsocketTransport) maDial(ctx context.Context, raddr ma.Multiaddr) (ma
 }
 
 func (t *WebsocketTransport) maListen(a ma.Multiaddr) (manet.Listener, error) {
-	lnet, lnaddr, err := manet.DialArgs(a)
+	l, err := newListener(a, t.tlsConf)
 	if err != nil {
 		return nil, err
 	}
-
-	nl, err := net.Listen(lnet, lnaddr)
-	if err != nil {
-		return nil, err
-	}
-
-	u, err := url.Parse("http://" + nl.Addr().String())
-	if err != nil {
-		nl.Close()
-		return nil, err
-	}
-
-	malist, err := t.wrapListener(nl, u)
-	if err != nil {
-		nl.Close()
-		return nil, err
-	}
-
-	go malist.serve()
-
-	return malist, nil
+	go l.serve()
+	return l, nil
 }
 
 func (t *WebsocketTransport) Listen(a ma.Multiaddr) (transport.Listener, error) {
@@ -157,23 +152,4 @@ func (t *WebsocketTransport) Listen(a ma.Multiaddr) (transport.Listener, error) 
 		return nil, err
 	}
 	return t.upgrader.UpgradeListener(t, malist), nil
-}
-
-func (t *WebsocketTransport) wrapListener(l net.Listener, origin *url.URL) (*listener, error) {
-	laddr, err := manet.FromNetAddr(l.Addr())
-	if err != nil {
-		return nil, err
-	}
-	wsma, err := ma.NewMultiaddr("/ws")
-	if err != nil {
-		return nil, err
-	}
-	laddr = laddr.Encapsulate(wsma)
-
-	return &listener{
-		laddr:    laddr,
-		Listener: l,
-		incoming: make(chan *Conn),
-		closed:   make(chan struct{}),
-	}, nil
 }

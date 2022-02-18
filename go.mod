@@ -9,6 +9,7 @@ require (
 	github.com/libp2p/go-libp2p-transport-upgrader v0.7.0
 	github.com/multiformats/go-multiaddr v0.4.1
 	github.com/multiformats/go-multiaddr-fmt v0.1.0
+	github.com/stretchr/testify v1.7.0
 )
 
 go 1.16
